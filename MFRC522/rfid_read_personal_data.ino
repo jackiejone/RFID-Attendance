@@ -17,6 +17,9 @@
  * SPI MOSI    MOSI         11 / ICSP-4   51        D11        ICSP-4           16
  * SPI MISO    MISO         12 / ICSP-1   50        D12        ICSP-1           14
  * SPI SCK     SCK          13 / ICSP-3   52        D13        ICSP-3           15
+
+ This code reads the data off an RFID chip when an RFID tag is presented close to the
+ MFRC522 RIFD scanner.
 */
 
 #include <SPI.h>
@@ -65,8 +68,6 @@ void loop() {
 
   mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); //dump some details about the card
 
-  //mfrc522.PICC_DumpToSerial(&(mfrc522.uid));      //uncomment this to see all blocks in hex
-
   //-------------------------------------------
 
   Serial.print(F("Student ID: "));
@@ -76,7 +77,7 @@ void loop() {
   block = 4;
   len = 18;
 
-  //------------------------------------------- GET FIRST NAME
+  //------------------------------------------- GET STUDENT ID
   status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 4, &key, &(mfrc522.uid)); //line 834 of MFRC522.cpp file
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("Authentication failed: "));
@@ -91,7 +92,7 @@ void loop() {
     return;
   }
 
-  //PRINT FIRST NAME
+  //PRINT STUDENT ID
   for (uint8_t i = 0; i < 16; i++)
   {
     if (buffer1[i] != 32)
@@ -101,7 +102,7 @@ void loop() {
   }
   Serial.print("\n");
 
-  //---------------------------------------- GET NAME
+  //---------------------------------------- GET FIRST NAME
 
   Serial.print(F("Name: \n"));
 
@@ -122,7 +123,7 @@ void loop() {
     return;
   }
 
-  //PRINT LAST NAME
+  //PRINT FIRST NAME
   for (uint8_t i = 0; i < 16; i++) {
     Serial.write(buffer2[i] );
   }
