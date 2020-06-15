@@ -45,19 +45,19 @@ void loop() {
   MFRC522::MIFARE_Key key;
   for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
 
-  //some variables we need
+  // some variables we need
   byte block;
   byte len;
   MFRC522::StatusCode status;
 
   //-------------------------------------------
 
-  // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
+  // Reset the loop if no new card present on the sensor/reader.
   if ( ! mfrc522.PICC_IsNewCardPresent()) {
     return;
   }
 
-  // Select one of the cards
+  // Select one of the cards if there are multiple cards present
   if ( ! mfrc522.PICC_ReadCardSerial()) {
     return;
   }
@@ -79,12 +79,15 @@ void loop() {
 
   //------------------------------------------- GET STUDENT ID
   status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 4, &key, &(mfrc522.uid)); //line 834 of MFRC522.cpp file
-  if (status != MFRC522::STATUS_OK) {
+  // Checks the status of the card. If the card is too far away it will not be able to be authenticated and therefore the loop resets
+  // Or if the sacnner is unable to authentiacte the card for any other reason
+  if (status != MFRC522::STATUS_OK) { 
     Serial.print(F("Authentication failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
     return;
   }
 
+// Checks the reading status of the card. If the status is not 'ok' then the loop will reset
   status = mfrc522.MIFARE_Read(block, buffer1, &len);
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("Reading failed: "));
@@ -92,7 +95,7 @@ void loop() {
     return;
   }
 
-  //PRINT STUDENT ID
+  // PRINT STUDENT ID by reading the data in block 4
   for (uint8_t i = 0; i < 16; i++)
   {
     if (buffer1[i] != 32)
@@ -104,7 +107,7 @@ void loop() {
 
   //---------------------------------------- GET FIRST NAME
 
-  Serial.print(F("Name: \n"));
+  Serial.print(F("Name: "));
 
   byte buffer2[18];
   block = 1;

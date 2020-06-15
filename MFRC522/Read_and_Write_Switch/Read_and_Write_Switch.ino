@@ -11,7 +11,11 @@
 // Defining pin numbers
 #define RST_PIN 9
 #define SS_PIN 10
-#define Switch_PIN 7 // Defining pin which the switch is connected to
+#define RED_LED 8
+
+// https://thekurks.net/blog/2016/4/25/using-interrupts
+const byte interruptPin = 2; // Defining pin which the switch is connected to
+volatile byte state = LOW;
 
 // Defining variables
 int Switch = 0;
@@ -19,19 +23,18 @@ int Switch = 0;
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance for RFID scanner
 
 void setup() {
-  pinMode(Switch_PIN, INPUT);                                   // Sets switch pin to an input pin
+  pinMode(interruptPin, INPUT_PULLUP);                          // Sets interrupt pin
+  attachInterrupt(digitalPinToInterrupt(interruptPin), switchState, RISING);
   Serial.begin(9600);                                           // Initialize serial monitor
   SPI.begin();                                                  // Initialize SPI bus
   mfrc522.PCD_Init();                                           // Initialize MFRC522 card
   Serial.println(F("Read personal data on a MIFARE PICC:"));    //shows in serial that it is ready to read
-
+  pinMode(RED_LED, OUTPUT);
 }
 
 void loop() {
   // Checks for a high or low signal to switch between reading RFID tags using the
   // MFRC522 or writing to RFID tags
-  Switch = digitalRead(Switch_PIN);
-  Serial.println(Switch);
   if (Switch == LOW) {
     RFID_read();
     delay(500);
@@ -41,6 +44,19 @@ void loop() {
   }
 }
 
+void switchState() {
+  if (Switch == LOW) {
+    Switch = HIGH;
+    digitalWrite(RED_LED, HIGH);
+    Serial.println("Set to HIGH");
+    delay(500);
+  } else if (Switch == HIGH){
+    Switch = LOW;
+    digitalWrite(RED_LED, LOW);
+    Serial.println("Set to LOW");
+    delay(500);
+  }
+}
 
 // Defining function for reading the RFID chip
 void RFID_read() {
