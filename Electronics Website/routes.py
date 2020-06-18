@@ -1,4 +1,4 @@
-from flask import render_template, Flask
+from flask import render_template, Flask, request
 from flask_sqlalchemy import SQLAlchemy
 import os
 
@@ -10,21 +10,26 @@ app.config["SQLALCHEMY_DATABASE_URI"] = database_file
 db = SQLAlchemy(app)
 
 class User(db.Model):
-    id = db.Column(db.Integer, unique=True, nullable=False)
+    __tablename__ = 'user'
+    
+    id = db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
     user_code = db.Column(db.Integer, unique=True, nullable=False)
     uid = db.Column(db.Text(30), unique=True, nullable=False)
 
-db.create_all
+db.create_all()
 
 @app.route('/')
 def index():
     return "test"
 
-@app.route('/insert/<user_id>/<uid>')
-def ins(user_id, uid):
-    new_user = User(user_code=user_id, uid=uid)
-    db.session.add(new_user)
-    db.sesison.commit()
+@app.route('/insert', methods=['GET', 'POST'])
+def ins():
+    user_id = request.args.get('user', None)
+    uid = request.args.get('id', None)
+    if user_id and uid:
+        new_user = User(user_code=user_id, uid=uid)
+        db.session.add(new_user)
+        db.sesison.commit()
     return render_template('insert.html', user_id=user_id, uid=uid)
 
 @app.errorhandler(404)
@@ -34,4 +39,4 @@ def error(e):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=3333)
+    app.run(host='0.0.0.0', debug=True, port=80)

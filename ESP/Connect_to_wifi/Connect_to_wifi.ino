@@ -6,6 +6,7 @@
 */
 
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
 
 #ifndef STASSID
 #define STASSID "RaspberryPiNetwork"
@@ -62,7 +63,30 @@ void loop() {
   // This will send a string to the server
   Serial.println("sending data to server");
   if (client.connected()) {
-    client.println("hello from ESP8266");
+    
+    HTTPClient http;
+
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    http.begin("192.168.4.1");
+
+    String httpRequestData = "/insert/16327/1";
+
+    Serial.print("httpRequestData: ");
+    Serial.print(httpRequestData);
+
+    int httpResponseCode = http.POST(httpRequestData);
+
+    if (httpResponseCode>0) {
+      Serial.print("HTTP Response code: ");
+      Serial.print(httpResponseCode);
+    }
+    else {
+      Serial.print("Error code :");
+      Serial.print(httpResponseCode);
+      }
+
+      http.end();
   }
 
   // wait for data to be available
