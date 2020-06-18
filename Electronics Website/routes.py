@@ -13,8 +13,8 @@ class User(db.Model):
     __tablename__ = 'user'
     
     id = db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
-    user_code = db.Column(db.Integer, unique=True, nullable=False)
-    uid = db.Column(db.Text(30), unique=True, nullable=False)
+    user_code = db.Column(db.Integer, nullable=False)
+    uid = db.Column(db.Text(30), nullable=False)
 
 db.create_all()
 
@@ -24,12 +24,21 @@ def index():
 
 @app.route('/insert', methods=['GET', 'POST'])
 def ins():
+    print(request.data)
     user_id = request.args.get('user', None)
     uid = request.args.get('id', None)
+    print(user_id)
+    print(uid)
+    print(type(user_id))
+    print(type(uid))
     if user_id and uid:
-        new_user = User(user_code=user_id, uid=uid)
-        db.session.add(new_user)
-        db.sesison.commit()
+        if User.query.filter_by(user_code=user_id).first():
+            print('duplicate')
+        else:
+            new_user = User(user_code=user_id, uid=uid)
+            db.session.add(new_user)
+            db.session.commit()
+            print('Successfully added')
     return render_template('insert.html', user_id=user_id, uid=uid)
 
 @app.errorhandler(404)
