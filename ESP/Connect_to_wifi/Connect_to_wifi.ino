@@ -55,12 +55,12 @@ void loop() {
 
     String httpRequestData = "user=" + user + "&uid=" + uid ;
 
-    http.begin("http://192.168.4.1/insert?user=16327&id=1");
+    http.begin("http://192.168.4.1/insert");
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
     
 
 
-    Serial.print("httpRequestData: ");
+    Serial.print("\nhttpRequestData: ");
     Serial.print(httpRequestData);
 
     int httpResponseCode = http.POST(httpRequestData);

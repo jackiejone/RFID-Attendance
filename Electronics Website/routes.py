@@ -22,24 +22,23 @@ db.create_all()
 def index():
     return "test"
 
-@app.route('/insert', methods=['GET', 'POST'])
+@app.route('/insert', methods=['POST'])
 def ins():
-    print(request.data)
-    user_id = request.args.get('user', None)
-    uid = request.args.get('id', None)
-    print(user_id)
-    print(uid)
-    print(type(user_id))
-    print(type(uid))
-    if user_id and uid:
-        if User.query.filter_by(user_code=user_id).first():
-            print('duplicate')
-        else:
-            new_user = User(user_code=user_id, uid=uid)
-            db.session.add(new_user)
-            db.session.commit()
-            print('Successfully added')
-    return render_template('insert.html', user_id=user_id, uid=uid)
+    try:        
+        user_id = request.form['user']
+        uid = request.form['uid']
+    except:
+        print('failed to obtain values')
+    else:
+        if user_id and uid:
+            if User.query.filter_by(user_code=user_id).first():
+                print('duplicate')
+            else:
+                new_user = User(user_code=user_id, uid=uid)
+                db.session.add(new_user)
+                db.session.commit()
+                print('Successfully added')
+    return user_id, uid
 
 @app.errorhandler(404)
 def error(e):
