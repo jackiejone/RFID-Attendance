@@ -40,10 +40,17 @@ def ins():
                 print('Successfully added')
     return user_id, uid
 
+@app.route('/get_data/<user>', methods=['GET'])
+def getdata(user):
+    print(user)
+    user_object = User.query.filter_by(user_code=user).first()
+    if user_object:
+        return f"{user_object.id} {user_object.user_code} {user_object.uid}"
+    return 'No User'
+    
 @app.errorhandler(404)
 def error(e):
     return "Error, page not found"
-
 
 
 if __name__ == '__main__':

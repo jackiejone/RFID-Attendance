@@ -13,6 +13,8 @@
 #define STAPSK  "password"
 #endif
 
+
+
 const char* ssid     = STASSID;
 const char* password = STAPSK;
 
@@ -75,5 +77,17 @@ void loop() {
       }
 
       http.end();
-      delay(2000);
+      delay(5000);
+      String userCode;
+      userCode = "16327";
+      http.begin("http://192.168.4.1/get_data/" + userCode);
+      
+      
+      int httpCode = http.GET();
+
+      String payload = http.getString();
+      Serial.println("\nReturned Data: " + payload);
+
+      http.end();
+      delay(5000);
   }
