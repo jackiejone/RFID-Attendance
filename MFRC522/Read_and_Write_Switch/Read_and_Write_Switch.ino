@@ -7,6 +7,8 @@
 // Importing custom libraries
 #include <SPI.h>
 #include <MFRC522.h>
+#include <Wire.h>
+#include <string.h>
 
 // Defining pin numbers
 #define RST_PIN 9
@@ -30,6 +32,7 @@ void setup() {
   mfrc522.PCD_Init();                                           // Initialize MFRC522 card
   Serial.println(F("Read personal data on a MIFARE PICC:"));    //shows in serial that it is ready to read
   pinMode(RED_LED, OUTPUT);
+  Wire.begin();                // join i2c bus with address #8
 }
 
 void loop() {
@@ -88,7 +91,6 @@ void RFID_read() {
 
   mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); //dump some details about the card
 
-  //mfrc522.PICC_DumpToSerial(&(mfrc522.uid));      //uncomment this to see all blocks in hex
 
   //-------------------------------------------
 
@@ -114,14 +116,20 @@ void RFID_read() {
     return;
   }
 
-  //PRINT FIRST NAME
+  //PRINT USER ID
+  char usrid[] = "";
   for (uint8_t i = 0; i < 16; i++)
   {
     if (buffer1[i] != 32)
     {
-      Serial.write(buffer1[i]);
+      strncat(usrid, &buffer1[i], 1);
     }
   }
+  Serial.print(usrid);
+  Wire.beginTransmission(8); // transmit to device #8
+  Wire.write("Uname");        // sends five bytes
+  Wire.write(usrid);              // sends one byte
+  Wire.endTransmission();    // stop transmitting
   Serial.print("\n");
 
   //---------------------------------------- GET NAME
@@ -145,11 +153,19 @@ void RFID_read() {
     return;
   }
 
-  //PRINT LAST NAME
+  //PRINT USER NAME
+  char uname[] = "";
+  
   for (uint8_t i = 0; i < 16; i++) {
-    Serial.write(buffer2[i] );
+    strncat(uname, &buffer2[i], 1);
   }
 
+
+  Wire.beginTransmission(8); // transmit to device #8
+  Wire.write("Uid");
+  Wire.write(uname);
+  Wire.endTransmission();    // stop transmitting
+  Serial.write(uname);
 
   //----------------------------------------
 
