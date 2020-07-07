@@ -7,16 +7,14 @@
 // Importing custom libraries
 #include <SPI.h>
 #include <MFRC522.h>
-#include <Wire.h>
-#include <string.h>
 
 // Defining pin numbers
-#define RST_PIN 9
-#define SS_PIN 10
-#define RED_LED 8
+#define RST_PIN D3
+#define SS_PIN D8
+#define RED_LED D0
 
 // https://thekurks.net/blog/2016/4/25/using-interrupts
-const byte interruptPin = 2; // Defining pin which the switch is connected to
+const byte interruptPin = D2; // Defining pin which the switch is connected to
 volatile byte state = LOW;
 
 // Defining variables
@@ -24,24 +22,27 @@ int Switch = 0;
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance for RFID scanner
 
+void ICACHE_RAM_ATTR switchState(); // Don't know what this does but it makes the code work
+
 void setup() {
   pinMode(interruptPin, INPUT_PULLUP);                          // Sets interrupt pin
   attachInterrupt(digitalPinToInterrupt(interruptPin), switchState, RISING);
-  Serial.begin(9600);                                           // Initialize serial monitor
+  Serial.begin(115200);                                           // Initialize serial monitor
   SPI.begin();                                                  // Initialize SPI bus
   mfrc522.PCD_Init();                                           // Initialize MFRC522 card
   Serial.println(F("Read personal data on a MIFARE PICC:"));    //shows in serial that it is ready to read
   pinMode(RED_LED, OUTPUT);
-  Wire.begin();                // join i2c bus with address #8
 }
 
 void loop() {
   // Checks for a high or low signal to switch between reading RFID tags using the
   // MFRC522 or writing to RFID tags
   if (Switch == LOW) {
+    digitalWrite(RED_LED, LOW);
     RFID_read();
     delay(500);
   } else if (Switch == HIGH) {
+    digitalWrite(RED_LED, HIGH);
     RFID_write();
     delay(500);
   }
@@ -50,14 +51,10 @@ void loop() {
 void switchState() {
   if (Switch == LOW) {
     Switch = HIGH;
-    digitalWrite(RED_LED, HIGH);
     Serial.println("Set to HIGH");
-    delay(500);
   } else if (Switch == HIGH){
     Switch = LOW;
-    digitalWrite(RED_LED, LOW);
     Serial.println("Set to LOW");
-    delay(500);
   }
 }
 
@@ -91,6 +88,7 @@ void RFID_read() {
 
   mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); //dump some details about the card
 
+  //mfrc522.PICC_DumpToSerial(&(mfrc522.uid));      //uncomment this to see all blocks in hex
 
   //-------------------------------------------
 
@@ -116,21 +114,14 @@ void RFID_read() {
     return;
   }
 
-  //PRINT USER ID
-  char usrid[] = "";
+  //PRINT FIRST NAME
   for (uint8_t i = 0; i < 16; i++)
   {
     if (buffer1[i] != 32)
     {
-      strncat(usrid, &buffer1[i], 1);
       Serial.write(buffer1[i]);
     }
   }
-  Serial.print(usrid);
-  Wire.beginTransmission(8); // transmit to device #8
-  Wire.write("Uname");        // sends five bytes
-  Wire.write(usrid);              // sends one byte
-  Wire.endTransmission();    // stop transmitting
   Serial.print("\n");
 
   //---------------------------------------- GET NAME
@@ -154,20 +145,11 @@ void RFID_read() {
     return;
   }
 
-  //PRINT USER NAME
-  char uname[] = "";
-  
+  //PRINT LAST NAME
   for (uint8_t i = 0; i < 16; i++) {
-    strncat(uname, &buffer2[i], 1);
-    Serial.write(buffer2[i]);
+    Serial.write(buffer2[i] );
   }
 
-
-  Wire.beginTransmission(8); // transmit to device #8
-  Wire.write("Uid");
-  Wire.write(uname);
-  Wire.endTransmission();    // stop transmitting
-  Serial.write(uname);
 
   //----------------------------------------
 
