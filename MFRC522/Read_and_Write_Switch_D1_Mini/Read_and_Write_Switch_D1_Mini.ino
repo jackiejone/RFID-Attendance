@@ -11,14 +11,14 @@
 // Defining pin numbers
 #define RST_PIN D3
 #define SS_PIN D8
-#define RED_LED D0
+#define RED_LED D1
 
 // https://thekurks.net/blog/2016/4/25/using-interrupts
 const byte interruptPin = D2; // Defining pin which the switch is connected to
 volatile byte state = LOW;
 
 // Defining variables
-int Switch = 0;
+int Switch = LOW;
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance for RFID scanner
 
@@ -40,10 +40,12 @@ void loop() {
   if (Switch == LOW) {
     digitalWrite(RED_LED, LOW);
     RFID_read();
+    
     delay(500);
   } else if (Switch == HIGH) {
     digitalWrite(RED_LED, HIGH);
     RFID_write();
+    
     delay(500);
   }
 }
@@ -51,10 +53,10 @@ void loop() {
 void switchState() {
   if (Switch == LOW) {
     Switch = HIGH;
-    Serial.println("Set to HIGH");
+    Serial.println("Set to Write");
   } else if (Switch == HIGH){
     Switch = LOW;
-    Serial.println("Set to LOW");
+    Serial.println("Set to Read");
   }
 }
 
