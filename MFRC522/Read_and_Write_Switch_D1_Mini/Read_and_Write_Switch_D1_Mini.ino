@@ -1,61 +1,120 @@
-/*This code switches the RFID-RC522 between read and write mode when a switch conntected to pin 7 is switched.
+/*This code switches the RFID-RC522 between read and write mode when a switch conntected to pin D4 is pressed.
   The code for reading and writing to the RFID tags is derived from examples from a RFID custom library
   by miguelbalboa from his RFID github Repository (https://github.com/miguelbalboa/rfid.git)
+  The code also sends the data scanned from an RFID tag to a server over WIFI
   by Jackie Jone
+
+  When uploading code to Wemos, you need to disconnect pins D0, D4
 */
 
 // Importing custom libraries
 #include <SPI.h>
 #include <MFRC522.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
 
 // Defining pin numbers
-#define RST_PIN D3
-#define SS_PIN D8
-#define RED_LED D1
+#define RST_PIN D3  // Reset Pin for MFRC522
+#define SS_PIN D8   // Slave Select Pin
+#define RED_LED D0  // LED pin for indicating read or write mode
+
+// Defining network names and passwords
+#ifndef STASSID
+#define STASSID "RaspberryPiNetwork"
+#define STAPSK  "password"
+#endif
+
+// Seting networking variables
+const char* ssid     = STASSID;
+const char* password = STAPSK;
+
+// Sever IP and Port
+const char* host = "192.168.4.1";
+const uint16_t port = 80;
 
 // https://thekurks.net/blog/2016/4/25/using-interrupts
-const byte interruptPin = D2; // Defining pin which the switch is connected to
-volatile byte state = LOW;
-
-// Defining variables
-int Switch = LOW;
+const byte interruptPin = D4; // Defining pin which the switch is connected to
+volatile byte state = LOW;    // Defining which mode the system is in, read or write for RFID
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance for RFID scanner
 
 void ICACHE_RAM_ATTR switchState(); // Don't know what this does but it makes the code work
 
 void setup() {
+  Serial.begin(115200);                                         // Initialize serial monitor
+  
+  // Connecting to WIFI network as a client
+  Serial.print("\nConnecting to ");
+  Serial.println(ssid);
+  
+  WiFi.mode(WIFI_STA); // Setting ESP8266 as a wifi client
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
   pinMode(interruptPin, INPUT_PULLUP);                          // Sets interrupt pin
-  attachInterrupt(digitalPinToInterrupt(interruptPin), switchState, RISING);
-  Serial.begin(115200);                                           // Initialize serial monitor
+  attachInterrupt(digitalPinToInterrupt(interruptPin), switchState, RISING);  // Attaches function to interrupt
   SPI.begin();                                                  // Initialize SPI bus
   mfrc522.PCD_Init();                                           // Initialize MFRC522 card
-  Serial.println(F("Read personal data on a MIFARE PICC:"));    //shows in serial that it is ready to read
-  pinMode(RED_LED, OUTPUT);
+  pinMode(RED_LED, OUTPUT);                                     // Sets LED pin
+  Serial.println("\nSet to Read");                              // Shows that system is in read mode
 }
 
 void loop() {
   // Checks for a high or low signal to switch between reading RFID tags using the
   // MFRC522 or writing to RFID tags
-  if (Switch == LOW) {
+  if (state == LOW) { // Checks state of variable to define whether it should be in read or write mode
     digitalWrite(RED_LED, LOW);
-    RFID_read();
-    
+    RFID_read(); // Runs function for reading RFID tag
     delay(500);
-  } else if (Switch == HIGH) {
+  } else if (state == HIGH) {
     digitalWrite(RED_LED, HIGH);
-    RFID_write();
-    
+    RFID_write(); // Runs function for writing to RFID tag
     delay(500);
   }
 }
 
+
+// Function for sending data to server
+void send_data(const String uid, const String user) {
+    HTTPClient http; // Begins HTTP client
+    Serial.print(uid);
+    Serial.print(user);
+    String httpRequestData = "user=" + user + "&uid=" + uid;
+    http.begin("http://192.168.4.1/insert");
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    Serial.print("\nhttpRequestData: ");
+    Serial.print(httpRequestData);
+
+    int httpResponseCode = http.POST(httpRequestData);
+
+    if (httpResponseCode>0) {
+      Serial.println("HTTP Response code: ");
+      Serial.print(httpResponseCode);
+    }
+    else {
+      Serial.println("Error code: ");
+      Serial.print(httpResponseCode);
+      }
+  }
+
+
+// Function to switch variable, attached to interrupt
 void switchState() {
-  if (Switch == LOW) {
-    Switch = HIGH;
+  if (state == LOW) {
+    state = HIGH;
     Serial.println("Set to Write");
-  } else if (Switch == HIGH){
-    Switch = LOW;
+  } else if (state == HIGH){
+    state = LOW;
     Serial.println("Set to Read");
   }
 }
@@ -90,10 +149,8 @@ void RFID_read() {
 
   mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); //dump some details about the card
 
-  //mfrc522.PICC_DumpToSerial(&(mfrc522.uid));      //uncomment this to see all blocks in hex
 
-  //-------------------------------------------
-
+  //------------------------------------------- GET STUDENT ID
   Serial.print(F("Student ID: "));
 
   byte buffer1[18];
@@ -101,7 +158,7 @@ void RFID_read() {
   block = 4;
   len = 18;
 
-  //------------------------------------------- GET FIRST NAME
+  
   status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 4, &key, &(mfrc522.uid)); //line 834 of MFRC522.cpp file
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("Authentication failed: "));
@@ -116,17 +173,23 @@ void RFID_read() {
     return;
   }
 
-  //PRINT FIRST NAME
+  //STUDENT ID
+  char usrid[] = "";
   for (uint8_t i = 0; i < 16; i++)
   {
     if (buffer1[i] != 32)
     {
+      usrid[i] = buffer1[i];
       Serial.write(buffer1[i]);
     }
   }
+  Serial.print("\nUSRID string: ");
+  Serial.print(usrid);
   Serial.print("\n");
+  String userid;
+  userid = String(usrid);
 
-  //---------------------------------------- GET NAME
+  //---------------------------------------- GET FIRST NAME
 
   Serial.print(F("Name: \n"));
 
@@ -147,21 +210,32 @@ void RFID_read() {
     return;
   }
 
-  //PRINT LAST NAME
+  //PRINT FIRST
+  char uname[] = "";
   for (uint8_t i = 0; i < 16; i++) {
-    Serial.write(buffer2[i] );
+    uname[i] = buffer2[i];
+    Serial.write(buffer2[i]);
   }
+  Serial.print("\nFist name: ");
+  Serial.println(uname);
 
+  String username;
+  username = String(uname);
+  send_data(userid, username);
 
   //----------------------------------------
 
   Serial.println(F("\n**End Reading**\n"));
-
   delay(500); //change value if you want to read cards faster
 
   mfrc522.PICC_HaltA();
   mfrc522.PCD_StopCrypto1();
 }
+
+
+
+
+
 
 // Defining function for writing to the RFID chip
 void RFID_write() {
