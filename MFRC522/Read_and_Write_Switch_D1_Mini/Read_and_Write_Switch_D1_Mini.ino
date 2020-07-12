@@ -12,6 +12,10 @@
 #include <MFRC522.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
+#include <LiquidCrystal_I2C.h>
+
+// Setting LCD address for I2C
+LiquidCrystal_I2C lcd(0x27,20,4);
 
 // Defining pin numbers
 #define RST_PIN D3  // Reset Pin for MFRC522
@@ -42,23 +46,32 @@ void ICACHE_RAM_ATTR switchState(); // Don't know what this does but it makes th
 
 void setup() {
   Serial.begin(115200);                                         // Initialize serial monitor
-  
+  lcd.init();                      // initialize the lcd 
+  lcd.backlight();
+  lcd.clear();
+  String message = "Connecting to: " + String(ssid); 
+  lcd.print(message);
   // Connecting to WIFI network as a client
-  Serial.print("\nConnecting to ");
+  Serial.print("\nConnecting to: ");
   Serial.println(ssid);
+
+  
   
   WiFi.mode(WIFI_STA); // Setting ESP8266 as a wifi client
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    lcd.scrollDisplayLeft();
     Serial.print(".");
+    delay(300);
   }
   
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+  lcd.clear();
+  lcd.setCursor(0,0);
 
   pinMode(interruptPin, INPUT_PULLUP);                          // Sets interrupt pin
   attachInterrupt(digitalPinToInterrupt(interruptPin), switchState, RISING);  // Attaches function to interrupt
@@ -74,10 +87,14 @@ void loop() {
   if (state == LOW) { // Checks state of variable to define whether it should be in read or write mode
     digitalWrite(RED_LED, LOW);
     RFID_read(); // Runs function for reading RFID tag
+    lcd.clear();
+    lcd.print("Mode: Read");
     delay(500);
   } else if (state == HIGH) {
     digitalWrite(RED_LED, HIGH);
     RFID_write(); // Runs function for writing to RFID tag
+    lcd.clear();
+    lcd.print("Mode: Write");
     delay(500);
   }
 }
@@ -107,6 +124,9 @@ void send_data(const String uid, const String user) {
       }
   }
 
+byte get_data() {
+  
+  }
 
 // Function to switch variable, attached to interrupt
 void switchState() {
@@ -185,6 +205,10 @@ void RFID_read() {
   }
   Serial.print("\nUSRID string: ");
   Serial.print(usrid);
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("User ID: ");
+  lcd.print(usrid);
   Serial.print("\n");
   String userid;
   userid = String(usrid);
@@ -218,11 +242,14 @@ void RFID_read() {
   }
   Serial.print("\nFist name: ");
   Serial.println(uname);
-
+  lcd.setCursor(0,1);
+  lcd.print("Username: ");
+  lcd.print(uname);
+  lcd.setCursor(0,0);
   String username;
   username = String(uname);
   send_data(userid, username);
-
+  delay(1000);
   //----------------------------------------
 
   Serial.println(F("\n**End Reading**\n"));
