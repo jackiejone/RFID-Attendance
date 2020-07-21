@@ -36,8 +36,7 @@ const char* password = STAPSK;
 const char* host = "192.168.4.1";
 const uint16_t port = 80;
 
-// https://thekurks.net/blog/2016/4/25/using-interrupts
-const byte interruptPin = D4; // Defining pin which the switch is connected to
+#define statePin D; // Defining pin which the switch is connected to
 volatile byte state = LOW;    // Defining which mode the system is in, read or write for RFID
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance for RFID scanner
@@ -73,8 +72,7 @@ void setup() {
   lcd.clear();
   lcd.setCursor(0,0);
 
-  pinMode(interruptPin, INPUT_PULLUP);                          // Sets interrupt pin
-  attachInterrupt(digitalPinToInterrupt(interruptPin), switchState, RISING);  // Attaches function to interrupt
+  pinMode(statePin, INPUT);                          // Sets interrupt pin
   SPI.begin();                                                  // Initialize SPI bus
   mfrc522.PCD_Init();                                           // Initialize MFRC522 card
   pinMode(RED_LED, OUTPUT);                                     // Sets LED pin
@@ -84,13 +82,13 @@ void setup() {
 void loop() {
   // Checks for a high or low signal to switch between reading RFID tags using the
   // MFRC522 or writing to RFID tags
-  if (state == LOW) { // Checks state of variable to define whether it should be in read or write mode
+  if (digitalRead(statePin) == LOW) { // Checks state of variable to define whether it should be in read or write mode
     digitalWrite(RED_LED, LOW);
     RFID_read(); // Runs function for reading RFID tag
     lcd.clear();
     lcd.print("Mode: Read");
     delay(500);
-  } else if (state == HIGH) {
+  } else if (digitalRead(statePin) == HIGH) {
     digitalWrite(RED_LED, HIGH);
     RFID_write(); // Runs function for writing to RFID tag
     lcd.clear();
@@ -127,17 +125,6 @@ void send_data(const String uid, const String user) {
 byte get_data() {
   
   }
-
-// Function to switch variable, attached to interrupt
-void switchState() {
-  if (state == LOW) {
-    state = HIGH;
-    Serial.println("Set to Write");
-  } else if (state == HIGH){
-    state = LOW;
-    Serial.println("Set to Read");
-  }
-}
 
 // Defining function for reading the RFID chip
 void RFID_read() {
