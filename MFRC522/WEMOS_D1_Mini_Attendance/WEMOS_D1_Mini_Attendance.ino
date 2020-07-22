@@ -244,12 +244,12 @@ void RFID_write() {
     return;
   }
 
-  Serial.print(F("Card UID:"));    //Dump UID
+  Serial.print(F("Card UID:"));                                                     // Prints UID of card to serial monitor
   for (byte i = 0; i < mfrc522.uid.size; i++) {
     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
     Serial.print(mfrc522.uid.uidByte[i], HEX);
   }
-  Serial.print(F(" PICC type: "));   // Dump PICC type
+  Serial.print(F(" PICC type: "));                                                  // Prints card PICC type to serial monitor
   MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
   Serial.println(mfrc522.PICC_GetTypeName(piccType));
 
@@ -258,14 +258,13 @@ void RFID_write() {
   MFRC522::StatusCode status;
   byte len;
 
-  Serial.setTimeout(20000L) ;     // wait until 20 seconds for input from serial
-  // Ask personal data: Name
+  Serial.setTimeout(10000L) ;                                                       // wait until 10 seconds for input from serial
+                                                                                    // Ask personal data: first
   Serial.println(F("Type name, ending with #"));
-  len = Serial.readBytesUntil('#', (char *) buffer, 30) ; // read family name from serial
-  for (byte i = len; i < 30; i++) buffer[i] = ' ';     // pad with spaces
+  len = Serial.readBytesUntil('#', (char *) buffer, 30) ;                           // read user name from serial
+  for (byte i = len; i < 30; i++) buffer[i] = ' ';                                  // pad with spaces
 
   block = 1;
-  //Serial.println(F("Authenticating using key A..."));
   status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid));
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("PCD_Authenticate() failed: "));
@@ -301,10 +300,10 @@ void RFID_write() {
   }
   else Serial.println(F("MIFARE_Write() success: "));
 
-  // Ask personal data: student number
+                                                                // Ask personal data: student number or user id
   Serial.println(F("Type student number, ending with #"));
-  len = Serial.readBytesUntil('#', (char *) buffer, 20) ; // read first name from serial
-  for (byte i = len; i < 20; i++) buffer[i] = ' ';     // pad with spaces
+  len = Serial.readBytesUntil('#', (char *) buffer, 20) ;       // read user id from serial
+  for (byte i = len; i < 20; i++) buffer[i] = ' ';              // pad with spaces
 
   block = 4;
   //Serial.println(F("Authenticating using key A..."));
@@ -325,7 +324,6 @@ void RFID_write() {
   else Serial.println(F("MIFARE_Write() success: "));
 
   block = 5;
-  //Serial.println(F("Authenticating using key A..."));
   status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid));
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("PCD_Authenticate() failed: "));
