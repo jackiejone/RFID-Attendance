@@ -4,8 +4,14 @@
   The code also sends the data scanned from an RFID tag to a server over WIFI
   by Jackie Jone
 
-  When uploading code to Wemos, you need to disconnect pins D0, D4
+  When uploading code to Wemos, you need to disconnect pin D4
 */
+// Importing external libraries
+#include <SPI.h>
+#include <MFRC522.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include <LiquidCrystal_I2C.h>
 
 // Defining Pin Numbers
 #define RST_PIN D3   // Reset Pin for MFRC522
@@ -84,9 +90,9 @@ void loop() {
 }
 
 // Custom function for sending data to server
-void send_data(const String uid, const String user) {
+void send_data(const String uid, const String card_id) {
     HTTPClient http;                                                           // Begins HTTP client
-    String httpRequestData = "user=" + user + "&uid=" + uid;                   // Creates a string with all the data and to send to the server
+    String httpRequestData = "card_uid=" + card_id + "&uid=" + uid;                   // Creates a string with all the data and to send to the server
     http.begin("http://192.168.4.1/insert");                                   // Defines the link to the web server which the data is to be sent to
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");       // Defines header for JSON request sent to the server
     Serial.print("\nhttpRequestData: ");                                       // Prints out what is going to be sent to the server
@@ -104,8 +110,13 @@ void send_data(const String uid, const String user) {
   }
 
 // Custom function to get usernames and ids to write to an RFID chip
-  String get_data() {
-  
+  String get_user() {
+      http.begin(host + "/get_users";
+      int httpCode = http.GET();
+
+      String payload = http.getString();
+      Serial.println("\nReturned Data: " + payload);
+      http.end();
   }
 
 
@@ -138,6 +149,8 @@ void RFID_read() {
   //-------------------------------------------
 
   mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); //dump some details about the card to serial monitor
+  String card_uid;                                  // Turning card details into a string
+  card_uid = String(&(mfrc522.uid));
 
 
   //------------------------------------------- Get student ID from the card
@@ -181,6 +194,7 @@ void RFID_read() {
   Serial.print("\n");
   String userid;
   userid = String(usrid);               // Turning char array of user ID into a string
+  send_data(userid, card_id);          // Running function to send the data from the rfid chip to server
 
   //---------------------------------------- Getting first name from RFID chip
 
@@ -215,9 +229,6 @@ void RFID_read() {
   lcd.print("Username: ");              // Printing username to the LCD
   lcd.print(uname);
   lcd.setCursor(0,0);                   // Setting LCD cursor back to start
-  String username;
-  username = String(uname);             // Turning char array into string
-  send_data(userid, username);          // Running function to send the data from the rfid chip to server
   delay(1000);                          // 1 second of delay
   //----------------------------------------
 
