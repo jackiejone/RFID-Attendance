@@ -3,10 +3,9 @@
   by miguelbalboa from his RFID github Repository (https://github.com/miguelbalboa/rfid.git)
   The code also sends the data scanned from an RFID tag to a server over WIFI
   by Jackie Jone
-
-  When uploading code to Wemos, you need to disconnect pin D4
+  When uploading code to Wemos, you need to disconnect pins D0, D4
 */
-// Importing external libraries
+
 #include <SPI.h>
 #include <MFRC522.h>
 #include <ESP8266WiFi.h>
@@ -16,8 +15,8 @@
 // Defining Pin Numbers
 #define RST_PIN D3   // Reset Pin for MFRC522
 #define SS_PIN D8    // Slave Select Pin
-#define RED_LED D0   // LED pin for indicating read or write mode
-#define switchPin D4 // Pin for switch to change read and write mode
+#define RED_LED D4   // LED pin for indicating read or write mode
+#define switchPin D0 // Pin for switch to change read and write mode
 
 // Network Information
 #define STASSID "RaspberryPiNetwork" // Network Name
@@ -90,9 +89,9 @@ void loop() {
 }
 
 // Custom function for sending data to server
-void send_data(const String uid, const String card_id) {
+void send_data(const String uid, const String user) {
     HTTPClient http;                                                           // Begins HTTP client
-    String httpRequestData = "card_uid=" + card_id + "&uid=" + uid;                   // Creates a string with all the data and to send to the server
+    String httpRequestData = "user=" + user + "&uid=" + uid;                   // Creates a string with all the data and to send to the server
     http.begin("http://192.168.4.1/insert");                                   // Defines the link to the web server which the data is to be sent to
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");       // Defines header for JSON request sent to the server
     Serial.print("\nhttpRequestData: ");                                       // Prints out what is going to be sent to the server
@@ -110,13 +109,8 @@ void send_data(const String uid, const String card_id) {
   }
 
 // Custom function to get usernames and ids to write to an RFID chip
-  String get_user() {
-      http.begin(host + "/get_users";
-      int httpCode = http.GET();
-
-      String payload = http.getString();
-      Serial.println("\nReturned Data: " + payload);
-      http.end();
+  String get_data() {
+  
   }
 
 
@@ -149,8 +143,6 @@ void RFID_read() {
   //-------------------------------------------
 
   mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); //dump some details about the card to serial monitor
-  String card_uid;                                  // Turning card details into a string
-  card_uid = String(&(mfrc522.uid));
 
 
   //------------------------------------------- Get student ID from the card
@@ -194,7 +186,6 @@ void RFID_read() {
   Serial.print("\n");
   String userid;
   userid = String(usrid);               // Turning char array of user ID into a string
-  send_data(userid, card_id);          // Running function to send the data from the rfid chip to server
 
   //---------------------------------------- Getting first name from RFID chip
 
@@ -229,6 +220,9 @@ void RFID_read() {
   lcd.print("Username: ");              // Printing username to the LCD
   lcd.print(uname);
   lcd.setCursor(0,0);                   // Setting LCD cursor back to start
+  String username;
+  username = String(uname);             // Turning char array into string
+  send_data(userid, username);          // Running function to send the data from the rfid chip to server
   delay(1000);                          // 1 second of delay
   //----------------------------------------
 
@@ -255,12 +249,12 @@ void RFID_write() {
     return;
   }
 
-  Serial.print(F("Card UID:"));                                                     // Prints UID of card to serial monitor
+  Serial.print(F("Card UID:"));    //Dump UID
   for (byte i = 0; i < mfrc522.uid.size; i++) {
     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
     Serial.print(mfrc522.uid.uidByte[i], HEX);
   }
-  Serial.print(F(" PICC type: "));                                                  // Prints card PICC type to serial monitor
+  Serial.print(F(" PICC type: "));   // Dump PICC type
   MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
   Serial.println(mfrc522.PICC_GetTypeName(piccType));
 
@@ -269,13 +263,14 @@ void RFID_write() {
   MFRC522::StatusCode status;
   byte len;
 
-  Serial.setTimeout(10000L) ;                                                       // wait until 10 seconds for input from serial
-                                                                                    // Ask personal data: first
+  Serial.setTimeout(20000L) ;     // wait until 20 seconds for input from serial
+  // Ask personal data: Name
   Serial.println(F("Type name, ending with #"));
-  len = Serial.readBytesUntil('#', (char *) buffer, 30) ;                           // read user name from serial
-  for (byte i = len; i < 30; i++) buffer[i] = ' ';                                  // pad with spaces
+  len = Serial.readBytesUntil('#', (char *) buffer, 30) ; // read family name from serial
+  for (byte i = len; i < 30; i++) buffer[i] = ' ';     // pad with spaces
 
   block = 1;
+  //Serial.println(F("Authenticating using key A..."));
   status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid));
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("PCD_Authenticate() failed: "));
@@ -311,10 +306,10 @@ void RFID_write() {
   }
   else Serial.println(F("MIFARE_Write() success: "));
 
-                                                                // Ask personal data: student number or user id
+  // Ask personal data: student number
   Serial.println(F("Type student number, ending with #"));
-  len = Serial.readBytesUntil('#', (char *) buffer, 20) ;       // read user id from serial
-  for (byte i = len; i < 20; i++) buffer[i] = ' ';              // pad with spaces
+  len = Serial.readBytesUntil('#', (char *) buffer, 20) ; // read first name from serial
+  for (byte i = len; i < 20; i++) buffer[i] = ' ';     // pad with spaces
 
   block = 4;
   //Serial.println(F("Authenticating using key A..."));
@@ -335,6 +330,7 @@ void RFID_write() {
   else Serial.println(F("MIFARE_Write() success: "));
 
   block = 5;
+  //Serial.println(F("Authenticating using key A..."));
   status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid));
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("PCD_Authenticate() failed: "));
