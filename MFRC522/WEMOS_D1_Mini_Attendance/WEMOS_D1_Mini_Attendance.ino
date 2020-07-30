@@ -16,8 +16,8 @@
 // Defining Pin Numbers
 #define RST_PIN D3   // Reset Pin for MFRC522
 #define SS_PIN D8    // Slave Select Pin
-#define RED_LED D0   // LED pin for indicating read or write mode
-#define switchPin D4 // Pin for switch to change read and write mode
+#define RED_LED D4   // LED pin for indicating read or write mode
+#define switchPin D0 // Pin for switch to change read and write mode
 
 // Network Information
 #define STASSID "RaspberryPiNetwork" // Network Name
@@ -110,14 +110,16 @@ void send_data(const String uid, const String card_id) {
   }
 
 // Custom function to get usernames and ids to write to an RFID chip
-  String get_user() {
-      http.begin(host + "/get_users";
-      int httpCode = http.GET();
+String get_user() {
+    HTTPClient http;
+    http.begin(String(host) + "/get_users");
+    int httpCode = http.GET();
 
-      String payload = http.getString();
-      Serial.println("\nReturned Data: " + payload);
-      http.end();
-  }
+    String payload = http.getString();
+    Serial.println("\nReturned Data: " + payload);
+    http.end();
+    return payload;
+}
 
 
 // Function for reading data (Name and ID) off RFID chip
@@ -149,8 +151,20 @@ void RFID_read() {
   //-------------------------------------------
 
   mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); //dump some details about the card to serial monitor
-  String card_uid;                                  // Turning card details into a string
-  card_uid = String(&(mfrc522.uid));
+  char card_id[] = "";
+  for (byte i = 0; i < mfrc522.uid.size; i++) {
+    Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+    Serial.print(mfrc522.uid.uidByte[i], HEX);
+    card_id[i] = mfrc522.uid.uidByte[i];
+  } 
+                                    // Turning card details into a string
+  String card_uid;
+  card_uid = String(card_id);
+  Serial.println("");
+  Serial.println(card_id);
+  Serial.println("");
+  Serial.println(card_uid);
+  
 
 
   //------------------------------------------- Get student ID from the card
