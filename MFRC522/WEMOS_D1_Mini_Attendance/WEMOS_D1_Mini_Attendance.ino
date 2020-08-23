@@ -22,17 +22,22 @@
 #define STASSID "RaspberryPiNetwork" // Network Name
 #define STAPSK  "password"           // Network Password
 
+// Scanner Information
+#define RFID_MODULE_ADDRESS "X7"
+
 // Setting LCD address for I2C
 LiquidCrystal_I2C lcd(0x27,20,4);
 
 // Create MFRC522 instance for RFID scanner
-MFRC522 mfrc522(SS_PIN, RST_PIN);   
+MFRC522 mfrc522(SS_PIN, RST_PIN);
 
 // Seting networking variables
 const char* ssid     = STASSID;    // Network Name
 const char* password = STAPSK;     // Network Password
 const char* host = "192.168.4.1";  // Server IP
 const uint16_t port = 80;          // Server Port
+
+const String moduelAddress = RFID_MODULE_ADDRESS; // Address of RFID module for server to identify it
 
 // Network connecting message
 String message = "Connecting to: " + String(ssid); 
@@ -89,9 +94,9 @@ void loop() {
 }
 
 // Custom function for sending data to server
-void send_data(const String uid, const String user) {
+void send_data(const String uid, const String user, const String rfidAddress) {
     HTTPClient http;                                                           // Begins HTTP client
-    String httpRequestData = "user=" + user + "&uid=" + uid;                   // Creates a string with all the data and to send to the server
+    String httpRequestData = "user=" + user + "&uid=" + uid + "sanner_id=" + rfidAddress;  // Creates a string with all the data and to send to the server
     http.begin("http://192.168.4.1/insert");                                   // Defines the link to the web server which the data is to be sent to
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");       // Defines header for JSON request sent to the server
     Serial.print("\nhttpRequestData: ");                                       // Prints out what is going to be sent to the server
@@ -109,9 +114,9 @@ void send_data(const String uid, const String user) {
   }
 
 // Custom function to get usernames and ids to write to an RFID chip
-String get_user() {
+String get_user(const String rfidAddress) {
     HTTPClient http;
-    http.begin(String(host) + "/get_users");
+    http.begin(String(host) + "/get_users/" + rfidAddress);
     int httpCode = http.GET();
 
     String payload = http.getString();
@@ -243,7 +248,7 @@ void RFID_read() {
   lcd.setCursor(0,0);                   // Setting LCD cursor back to start
   String username;
   username = String(uname);             // Turning char array into string
-  send_data(userid, username);          // Running function to send the data from the rfid chip to server
+  send_data(userid, username, moduelAddress);          // Running function to send the data from the rfid chip to server
   delay(1000);                          // 1 second of delay
   //----------------------------------------
 
