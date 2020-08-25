@@ -1,0 +1,10 @@
+<!-- Format for flashed messages -->
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul id='flashes'>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}

@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>Register</h1>
+    <form method='POST' action=''>
+        {{ form.hidden_tag() }}
+        <p>Student Name</p>
+        {{ form.user.tag }}
+        {% if form.errors['user'] %}
+            {% for error in form.errors['user'] %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+        {{ form.user }}
+        <br>
+        <p>Student Code</p>
+        {% if form.errors['user_code'] %}
+            {% for error in form.errors['user_code'] %}
+                <p>{{ error }}</p> 
+            {% endfor %}
+        {% endif %}
+        {{ form.user_code }}
+        <br>
+        {{ form.submit }}
+    </form>
+{% endblock %}

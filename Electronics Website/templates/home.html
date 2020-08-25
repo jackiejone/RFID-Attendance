@@ -1,0 +1,7 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>RFID Attendance</h1>
+    {% for time in times %}
+        {{ time }}
+    {% endfor %}
+{% endblock %}
