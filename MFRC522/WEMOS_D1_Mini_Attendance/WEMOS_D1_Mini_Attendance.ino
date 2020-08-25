@@ -94,9 +94,9 @@ void loop() {
 }
 
 // Custom function for sending data to server
-void send_data(const String uid, const String user, const String rfidAddress) {
+void send_data(const String user_code, const String uid) {
     HTTPClient http;                                                           // Begins HTTP client
-    String httpRequestData = "user=" + user + "&uid=" + uid + "sanner_id=" + rfidAddress;  // Creates a string with all the data and to send to the server
+    String httpRequestData = "user_code=" + user_code + "&card_id=" + uid;  // Creates a string with all the data and to send to the server
     http.begin("http://192.168.4.1/insert");                                   // Defines the link to the web server which the data is to be sent to
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");       // Defines header for JSON request sent to the server
     Serial.print("\nhttpRequestData: ");                                       // Prints out what is going to be sent to the server
@@ -248,7 +248,7 @@ void RFID_read() {
   lcd.setCursor(0,0);                   // Setting LCD cursor back to start
   String username;
   username = String(uname);             // Turning char array into string
-  send_data(userid, username, moduelAddress);          // Running function to send the data from the rfid chip to server
+  send_data(userid, card_uid);          // Running function to send the data from the rfid chip to server
   delay(1000);                          // 1 second of delay
   //----------------------------------------
 
