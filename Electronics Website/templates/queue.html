@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>Queue User</h1>
+
+    {% if form.user.choices and form.scanner.choices %}
+        <form method='POST' action=''>
+            {{ form.csrf_token }}
+            <p>User</p>
+            {% if form.errors['user'] %}
+                {% for error in form.errors['user'] %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            {% endif %}
+            {{ form.user }}
+            <br>
+            <p>Scanner</p>
+            {% if form.errors['scanner'] %}
+                {% for error in form.errors['scanner'] %}
+                    <p>{{ error }}</p> 
+                {% endfor %}
+            {% endif %}
+            {{ form.scanner }}
+            <br>
+            {{ form.queue }}
+        </form>
+    {% else %}
+        <p>No scanners or users in the database</p>
+    {% endif %}
+
+    {% if queue %}
+        <h2>Queue</h2>
+        <ul>
+            {% for q in queue %}
+                <li>{{ q.user.name }} {{ q.scanners.name }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}

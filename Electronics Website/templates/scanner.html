@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>Add Scanner</h1>
+    <form method='POST' action=''>
+        {{ form.csrf_token }}
+        <p>Scanner ID</p>
+        {% if form.errors['name'] %}
+            {% for error in form.errors['name'] %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+        {{ form.name }}
+        <br>
+        {{ form.add }}
+    </form>
+
+    {% if scanners %}
+        <h2>Scanners</h2>
+        <ul>
+            {% for scanner in scanners %}
+                <li>{{ scanner.name }}</li>
+            {% endfor %}
+        </ul>   
+    {% endif %}
+{% endblock %}

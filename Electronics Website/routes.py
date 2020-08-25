@@ -1,5 +1,5 @@
 # Importing Libraries
-from flask import render_template, Flask, request, flash
+from flask import render_template, Flask, request, flash, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from forms import *
 import datetime
@@ -26,23 +26,32 @@ class User(db.Model):
     name = db.Column(db.String(20), nullable=False)
     user_code = db.Column(db.Integer, nullable=False)
     uid = db.Column(db.Text(30), nullable=True)
-    times = db.relationship('UserTimes', back_populates='user_time')
-    queue = db.relationship('ScannerQeue', back_populates='user')
+    times = db.relationship('UserTimes', back_populates='user')
+    queue = db.relationship('ScannerQueue', back_populates='user')
 
 class UserTimes(db.Model):
     __tablename__ = 'usertimes'
     
     id = db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
-    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     time = db.Column(db.DateTime)
     user = db.relationship('User', back_populates='times')
 
 class ScannerQueue(db.Model):
     __tablename__ = 'scannerqueue'
+    
     id = db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    scanner = db.Column(db.String(10))
+    scanner = db.Column(db.Integer, db.ForeignKey('scanner.id'))
     user = db.relationship('User', back_populates='queue')
+    scanners = db.relationship('Scanner', back_populates='queue')
+
+class Scanner(db.Model):
+    __tablename__ = 'scanner'
+    
+    id = db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
+    name = db.Column(db.String(10), nullable=False, unique=True)
+    queue = db.relationship('ScannerQueue', back_populates='scanners')
 
 db.create_all()
 
@@ -51,8 +60,11 @@ db.create_all()
 @app.route('/home', methods=['GET'])
 def index():
     times = UserTimes.query.all()
-    times_list = [(i.user.name, i.time) for i in times]
-    return render_template('home.html', times=times_list)
+    if times:
+        times_list = [(i.user.name, i.time) for i in times]
+        return render_template('home.html', times=times_list)
+    else:
+        return render_template('home.html', times=None)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -85,7 +97,7 @@ def ins():
         user_code = request.form['user_code']
         uid = request.form['card_id']
     except:
-        print('failed to obtain values')
+        return 'Failed To Obtain Values'
     else:
         # Checks if the user id and uid exist
         if user_code and uid:
@@ -94,7 +106,7 @@ def ins():
             time = datetime.datetime.now()
             user = User.query.filter(user_code=user_code).first()
             if user.uid != uid:
-                return('Invalid Card For User')
+                return 'Invalid Card For User'
         
             try:
                 new_time = UserTimes(user=user.id, time=time)
@@ -102,31 +114,112 @@ def ins():
                 db.session.flush()
             except:
                 db.session.rollback()
-                return('An Error Occured')
+                return 'An Error Occured'
             else:
                 db.session.commit()
                 return 'Success'
+
+@app.route('/add_scanner', methods=['GET', 'POST'])
+def add_scanner():
+    form = ScannerForm()
+    if request.method == 'POST' and form.validate_on_submit():
+        scanner_id = form.name.data.strip()
+        if Scanner.query.filter_by(name=scanner_id).first():
+            flash("Scanner Already Exists")
+        else:
+            try:
+                new_scanner = Scanner(name=scanner_id)
+                db.session.add(new_scanner)
+                db.session.flush()
+            except:
+                flash('An Error Occured, Scanner was not Added')
+                db.session.rollback()
+            else:
+                db.session.commit()
+                flash('Scanner was successfully added')
+    scanners = Scanner.query.all()
+    return render_template('scanner.html', form=form, scanners=scanners)
+    
+
+@app.route('/queue_user', methods=['GET', 'POST'])
+def queue_user():
+    form = QueueForm()
+    form.user.choices = [(x.id, x.name) for x in User.query.all()]
+    form.scanner.choices = [(x.id, x.name) for x in Scanner.query.all()]
+    if request.method == 'POST' and form.validate_on_submit():
+        if ScannerQueue.query.filter_by(user_id=form.user.data, scanner=form.scanner.data).first():
+            flash('User is already queued to scanner')
+        else:
+            try:
+                new_queue = ScannerQueue(user_id = form.user.data, scanner=form.scanner.data)
+                db.session.add(new_queue)
+                db.session.flush()
+            except:
+                flash('An Error Occured')
+                db.session.rollback()
+            else:
+                db.session.commit()
+                flash('Successfully added to queue')
+    queue = ScannerQueue.query.all()
+    return render_template('queue.html', form=form, queue=queue)
 
 # Gets the data of a specific user and returns the id, user_id, and uid of the user
 @app.route('/get_data/<scanner>', methods=['GET'])
 def getdata(scanner):
     user = ScannerQueue.query.filter_by(scanner=scanner.strip()).first()
     if user:
-        return
+        return [user.name, user.user_code]
     return 'No User'
+
+@app.route('/receive_data', methods=['POST'])
+def receivedata():
+    try:
+        # Gets user id and uid of card from the JSON data of the post request
+        user_code = request.form['user_code']
+        uid = request.form['card_id']
+        scanner = request.form['scanner']
+    except:
+        return 'Failed To Obtain Values'
+    else:
+        # Checks if the user id and uid exist
+        if user_code and uid:
+            user_code = int(user_code) if type(user_code) != int else user_code
+            uid = uid.strip()
+            user = User.query.filter(user_code=user_code).first()
+            try:
+                user.uid = uid
+                db.session.flush()
+            except:
+                db.session.rollback()
+                return 'An Error Occured'
+            else:
+                db.session.commit()
+                
+                delete_scannerqueue = ScannerQueue.query.filter_by(scanner=scanner, user_id=user.id).first()
+                db.session.delete(delete_scannerqueue)
+                try:
+                    db.session.flush()
+                except:
+                    db.session.rollback()
+                else:
+                    db.session.commit()
+                return "User's card updated"
 
 
 # Error handling route for 404, page not found
 @app.errorhandler(404)
 def error(e):
-    return "Error, page not found"
+    flash('Could not find that page (Error 404)')
+    return redirect(url_for('index'))
 
 # Error handling route for 405, invalid request method
 @app.errorhandler(405)
 def error(e):
-    return "Error, Invalid method for route"
+    flash('Invalid Request Method')
+    return redirect(url_for('index'))
 
 
 # Runs app if the script is run directly
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True, port=80)
+    #app.run(host='0.0.0.0', debug=True, port=80)
+    app.run(debug=True)

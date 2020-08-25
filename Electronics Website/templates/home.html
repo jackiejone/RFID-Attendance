@@ -1,7 +1,11 @@
 {% extends "layout.html" %}
 {% block content %}
     <h1>RFID Attendance</h1>
-    {% for time in times %}
-        {{ time }}
-    {% endfor %}
+    {% if times %}
+        {% for time in times %}
+            {{ time }}
+        {% endfor %}
+    {% else %}
+        <p>No Times</p>
+    {% endif %}
 {% endblock %}
