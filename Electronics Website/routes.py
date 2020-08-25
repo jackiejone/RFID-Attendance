@@ -163,11 +163,14 @@ def queue_user():
     queue = ScannerQueue.query.all()
     return render_template('queue.html', form=form, queue=queue)
 
-@app.route('/get_data/<scanner>', methods=['GET'])
-def getdata(scanner):
+@app.route('/get_data/<scanner>/<data_type>', methods=['GET'])
+def getdata(scanner, data_type):
     user = ScannerQueue.query.filter_by(scanner=scanner.strip()).first()
     if user:
-        return [user.user.name, user.user.user_code]
+        if data_type == "name":
+            return user.user.name
+        elif data_type == "code":
+            return user.user.user_code
     return 'No User'
 
 @app.route('/receive_data', methods=['POST'])
