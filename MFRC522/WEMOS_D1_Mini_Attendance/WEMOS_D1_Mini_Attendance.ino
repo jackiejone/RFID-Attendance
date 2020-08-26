@@ -15,7 +15,6 @@
 // Defining Pin Numbers
 #define RST_PIN D3   // Reset Pin for MFRC522
 #define SS_PIN D8    // Slave Select Pin
-#define RED_LED D4   // LED pin for indicating read or write mode
 #define switchPin D0 // Pin for switch to change read and write mode
 
 // Network Information
@@ -79,13 +78,11 @@ void setup() {
 void loop() {
   // Checks the state of the pin connected to the switch to switch between reading and writing mode
   if (digitalRead(switchPin) == LOW) {                      // If the pin is LOW, put the system into Read Mode
-    digitalWrite(RED_LED, LOW);                             // Turns red LED off to show that the system is in read mode
     RFID_read();                                            // Runs function for reading RFID tag
     lcd.clear();                                            // Clears anything on LCD
     lcd.print("Mode: Read");                                // Prints on the LCD that the system is in read mode
     delay(500);                                             // 0.5 seconds of dealy
   } else if (digitalRead(switchPin) == HIGH) {              // If the pin is HIGH, put the system into Write Mode
-    digitalWrite(RED_LED, HIGH);                            // Turns the red LED on to show that the system is in write mode
     RFID_write();                                           // Runs function for writing to RFID tag 
     lcd.clear();                                            // Clears and message on the LCD
     lcd.print("Mode: Write");                               // Prints on the lcd that the system is in write mode
