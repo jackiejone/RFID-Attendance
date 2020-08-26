@@ -93,11 +93,24 @@ void loop() {
   }
 }
 
+// Function to convert card UID to string
+void array_to_string(byte array[], unsigned int len, char buffer[])
+{
+   for (unsigned int i = 0; i < len; i++)
+   {
+      byte nib1 = (array[i] >> 4) & 0x0F;
+      byte nib2 = (array[i] >> 0) & 0x0F;
+      buffer[i*2+0] = nib1  < 0xA ? '0' + nib1  : 'A' + nib1  - 0xA;
+      buffer[i*2+1] = nib2  < 0xA ? '0' + nib2  : 'A' + nib2  - 0xA;
+   }
+   buffer[len*2] = '\0';
+}
+
 // Custom function for sending data to server
 void send_data(const String user_code, const String uid) {
     HTTPClient http;                                                           // Begins HTTP client
     String httpRequestData = "user_code=" + user_code + "&card_id=" + uid;  // Creates a string with all the data and to send to the server
-    http.begin("http//:" + String(host) + "/insert");                                   // Defines the link to the web server which the data is to be sent to
+    http.begin("http://" + String(host) + "/insert");                                   // Defines the link to the web server which the data is to be sent to
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");       // Defines header for JSON request sent to the server
     Serial.print("\nhttpRequestData: ");                                       // Prints out what is going to be sent to the server
     Serial.print(httpRequestData);
@@ -118,7 +131,7 @@ void send_data(const String user_code, const String uid) {
 String write_response(const String user_code, const String uid, const String rfidAddress) {
     HTTPClient http;                                                           // Begins HTTP client
     String httpRequestData = "user_code=" + user_code + "&card_id=" + uid + "scanner" + rfidAddress;  // Creates a string with all the data and to send to the server
-    http.begin("http//:" + String(host) + "/receive_data");                                   // Defines the link to the web server which the data is to be sent to
+    http.begin("http://" + String(host) + "/receive_data");                                   // Defines the link to the web server which the data is to be sent to
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");       // Defines header for JSON request sent to the server
     Serial.print("\nhttpRequestData: ");                                       // Prints out what is going to be sent to the server
     Serial.print(httpRequestData);
@@ -137,7 +150,7 @@ String write_response(const String user_code, const String uid, const String rfi
 // Custom function to get usernames and ids to write to an RFID chip
 String get_user(const String rfidAddress, const String data) {
   HTTPClient http;
-  http.begin("http//:" + String(host) + "/get_users/" + rfidAddress + "/" + data);
+  http.begin("http://" + String(host) + "/get_users/" + rfidAddress + "/" + data);
   int httpCode = http.GET();
 
   String payload = http.getString();
@@ -174,21 +187,14 @@ void RFID_read() {
   Serial.println(F("**Card Detected:**"));
 
   //-------------------------------------------
-
-  mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); //dump some details about the card to serial monitor
-  char card_id[] = "";
-  for (byte i = 0; i < mfrc522.uid.size; i++) {
-    Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-    Serial.print(mfrc522.uid.uidByte[i], HEX);
-    card_id[i] = mfrc522.uid.uidByte[i];
-  } 
+  
                                     // Turning card details into a string
   String card_uid;
-  card_uid = String(card_id);
-  Serial.println("");
-  Serial.println(card_id);
-  Serial.println("");
-  Serial.println(card_uid);
+  char str[32] = "";
+  array_to_string(mfrc522.uid.uidByte, 4, str); //Insert (byte array, length, char array for output)
+  Serial.println("UID OF CARD");
+  Serial.println(str); //Print the output uid string
+  card_uid = String(str);
   
 
 
@@ -216,6 +222,7 @@ void RFID_read() {
 
   // Getting student ID from the card
   char usrid[] = "";
+  int i;
   for (uint8_t i = 0; i < 16; i++)
   {
     if (buffer1[i] != 32)
@@ -223,6 +230,7 @@ void RFID_read() {
       usrid[i] = buffer1[i];            // Appending characters of the student ID to a variable
     }
   }
+  usrid[i] = "\0";
   
   Serial.print("\nUSRID string: ");     // Printing student ID to the serial monitor
   Serial.print(usrid);
@@ -310,11 +318,12 @@ void RFID_write() {
   MFRC522::StatusCode status;
   byte len;
 
-  Serial.setTimeout(20000L) ;     // wait until 20 seconds for input from serial
+  
+
   // Ask personal data: Name
   Serial.println(F("Type name, ending with #"));
-  len = Serial.readBytesUntil('#', (char *) buffer, 30) ; // read family name from serial
-  for (byte i = len; i < 30; i++) buffer[i] = ' ';     // pad with spaces
+  String userName = get_user(moduelAddress,"name");  // Function to get the name of the user from the database
+  userName.getBytes(buffer, 30);                         // Converting the name from a string to a buffer array
 
   block = 1;
   //Serial.println(F("Authenticating using key A..."));

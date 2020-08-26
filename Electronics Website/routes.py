@@ -101,10 +101,11 @@ def ins():
     else:
         # Checks if the user id and uid exist
         if user_code and uid:
+            user_code.strip("�?\n")
             user_code = int(user_code) if type(user_code) != int else user_code
             uid = uid.strip()
             time = datetime.datetime.now()
-            user = User.query.filter(user_code=user_code).first()
+            user = User.query.filter_by(user_code=user_code).first()
             if user.uid != uid:
                 return 'Invalid Card For User'
         
