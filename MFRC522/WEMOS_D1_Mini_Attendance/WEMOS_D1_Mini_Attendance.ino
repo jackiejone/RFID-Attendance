@@ -119,6 +119,18 @@ void send_data(const String user_code, const String uid) {
     if (httpResponseCode>0) {                                                  // Checks if the response code is greater than 0 (Meaning that the messasge was successfully sent)
       Serial.println("HTTP Response code: ");                                  // Prints the reponse code to the serial monitor
       Serial.print(httpResponseCode);
+      
+      if (httpResponseCode == HTTP_CODE_OK) {                                  // Checks if the response code was good
+        const String& payload = http.getString();                              // Gets string back from the server
+        Serial.println("received payload:\n<<");                               // Prints string from server to serial monitor
+        Serial.println(payload);
+        Serial.println(">>");
+        lcd.clear();                                                           // Clears then prints string from server to LCD
+        lcd.setCursor(0,0);
+        lcd.print(payload);
+        delay(300);
+      }
+
     }
     else {                                                                     // If the HTTP repose code is not greater than 0 then an error has occured
       Serial.println("Error code: ");                                          // Prints HTTP response code to the serial monitor
@@ -140,6 +152,7 @@ String write_response(const String user_code, const String uid, const String rfi
     if (httpResponseCode>0) {                                                  // Checks if the response code is greater than 0 (Meaning that the messasge was successfully sent)
       Serial.println("HTTP Response code: ");                                  // Prints the reponse code to the serial monitor
       Serial.print(httpResponseCode);
+
     }
     else {                                                                     // If the HTTP repose code is not greater than 0 then an error has occured
       Serial.println("Error code: ");                                          // Prints HTTP response code to the serial monitor
@@ -222,7 +235,6 @@ void RFID_read() {
 
   // Getting student ID from the card
   char usrid[] = "";
-  int i;
   for (uint8_t i = 0; i < 16; i++)
   {
     if (buffer1[i] != 32)
@@ -230,7 +242,6 @@ void RFID_read() {
       usrid[i] = buffer1[i];            // Appending characters of the student ID to a variable
     }
   }
-  usrid[i] = "\0";
   
   Serial.print("\nUSRID string: ");     // Printing student ID to the serial monitor
   Serial.print(usrid);

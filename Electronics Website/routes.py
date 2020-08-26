@@ -107,7 +107,7 @@ def ins():
             time = datetime.datetime.now()
             user = User.query.filter_by(user_code=user_code).first()
             if user.uid != uid:
-                return 'Invalid Card For User'
+                return 'Invalid Card'
         
             try:
                 new_time = UserTimes(user=user.id, time=time)
@@ -115,7 +115,7 @@ def ins():
                 db.session.flush()
             except:
                 db.session.rollback()
-                return 'An Error Occured'
+                return 'Error Occured'
             else:
                 db.session.commit()
                 return 'Success'
