@@ -311,6 +311,32 @@ void RFID_read() {
 
 // Custom function for writing to the RFID chip
 void RFID_write() {
+
+  // Gets name from database
+  String userName = get_user(moduelAddress, "name");  // Function to get the name of the user from the database
+  // Gets student number from database
+  String userCode = get_user(moduelAddress, "code");  // Function to get the name of the user from the database
+
+  if (userName == "No User" || userCode == "No User") {
+    Serial.println("No User");
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("No User");
+    lcd.setCursor(0, 1);
+    lcd.print("Queue User");
+    delay(800);
+    return;
+  } else {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Name: ");
+    lcd.print(userName);
+    lcd.setCursor(0, 1);
+    lcd.print("Code: ");
+    lcd.print(userCode);
+    delay(1000);
+    }
+  
   // Prepare key - all keys are set to FFFFFFFFFFFFh at chip delivery from the factory.
   MFRC522::MIFARE_Key key;
   for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
@@ -347,9 +373,6 @@ void RFID_write() {
   MFRC522::StatusCode status;
   byte len;
 
-  
-  // Gets name from database
-  String userName = get_user(moduelAddress, "name");  // Function to get the name of the user from the database
   userName.getBytes(buffer, 30);                     // Converting the name from a string to a buffer array
 
   block = 1;
@@ -389,8 +412,7 @@ void RFID_write() {
   }
   else Serial.println(F("MIFARE_Write() success: "));
 
-  // Gets student number from database
-  String userCode = get_user(moduelAddress, "code");  // Function to get the name of the user from the database
+
   userCode.getBytes(buffer, 20);                     // Converting the name from a string to a buffer array
 
   block = 4;
@@ -430,8 +452,15 @@ void RFID_write() {
   else Serial.println(F("MIFARE_Write() success: "));
 
   write_response(userCode, card_uid, moduelAddress);
-
+  
+  
   Serial.println(" ");
+  Serial.println("Successful Write");
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Successful Write");
+  delay(1000);
+  
   mfrc522.PICC_HaltA(); // Halt PICC
   mfrc522.PCD_StopCrypto1();  // Stop encryption on PCD
 }

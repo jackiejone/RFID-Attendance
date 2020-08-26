@@ -190,7 +190,7 @@ def getdata(scanner, data_type):
             return user.user.name
         elif data_type == "code":
             return str(user.user.user_code)
-    return 'No User'
+    return "No User"
 
 @app.route('/receive_data', methods=['POST'])
 def receivedata():
