@@ -101,7 +101,7 @@ def ins():
     else:
         # Checks if the user id and uid exist
         if user_code and uid:
-            user_code.strip("�?\n")
+            user_code.strip("ï¿½�?\n")
             user_code = int(user_code) if type(user_code) != int else user_code
             uid = uid.strip()
             time = datetime.datetime.now()
@@ -110,7 +110,7 @@ def ins():
                 return 'Invalid Card'
         
             try:
-                new_time = UserTimes(user=user.id, time=time)
+                new_time = UserTimes(user_id=user.id, time=time)
                 db.session.add(new_time)
                 db.session.flush()
             except:
@@ -184,6 +184,7 @@ def remove_queue():
 def getdata(scanner, data_type):
     scanner_object = Scanner.query.filter_by(name=scanner.strip()).first()
     user = ScannerQueue.query.filter_by(scanner=scanner_object.id).first()
+
     if user:
         if data_type == "name":
             return user.user.name
@@ -193,19 +194,27 @@ def getdata(scanner, data_type):
 
 @app.route('/receive_data', methods=['POST'])
 def receivedata():
+    print(request.form['user_code'])
+    print(request.form['card_id'])
+    print(request.form['scanner'])
     try:
         # Gets user id and uid of card from the JSON data of the post request
         user_code = request.form['user_code']
+        print("user code: " + user_code)
         uid = request.form['card_id']
+        print("uid: " + uid)
         scanner = request.form['scanner']
+        print("scanner " + scanner)
     except:
         return 'Failed To Obtain Values'
     else:
         # Checks if the user id and uid exist
         if user_code and uid:
             user_code = int(user_code) if type(user_code) != int else user_code
+            print(type(user_code))
             uid = uid.strip()
-            user = User.query.filter(user_code=user_code).first()
+            user = User.query.filter_by(user_code=user_code).first()
+            print(user)
             try:
                 user.uid = uid
                 db.session.flush()
@@ -215,7 +224,8 @@ def receivedata():
             else:
                 db.session.commit()
                 
-                delete_scannerqueue = ScannerQueue.query.filter_by(scanner=scanner, user_id=user.id).first()
+                scanner_class = Scanner.query.filter_by(name=scanner).first()
+                delete_scannerqueue = ScannerQueue.query.filter_by(scanner=scanner_class.id, user_id=user.id).first()
                 db.session.delete(delete_scannerqueue)
                 try:
                     db.session.flush()

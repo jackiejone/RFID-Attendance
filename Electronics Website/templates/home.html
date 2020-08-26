@@ -2,9 +2,11 @@
 {% block content %}
     <h1>RFID Attendance</h1>
     {% if times %}
-        {% for time in times %}
-            {{ time }}
-        {% endfor %}
+        <ul>
+            {% for time in times %}
+                <li><b>Name:</b> {{ time[0] }} <b>Time:</b> {{ time[1].date() }} {{ time[1].time() }}</li>
+            {% endfor %}
+        </ul>
     {% else %}
         <p>No Times</p>
     {% endif %}

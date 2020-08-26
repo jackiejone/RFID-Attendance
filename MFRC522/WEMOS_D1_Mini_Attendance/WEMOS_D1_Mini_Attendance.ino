@@ -136,9 +136,9 @@ void send_data(const String user_code, const String uid) {
 
 // Custom function to return data back to the server when writing data to a RFID card
 
-String write_response(const String user_code, const String uid, const String rfidAddress) {
+void write_response(const String user_code, const String uid, const String rfidAddress) {
     HTTPClient http;                                                           // Begins HTTP client
-    String httpRequestData = "user_code=" + user_code + "&card_id=" + uid + "scanner" + rfidAddress;  // Creates a string with all the data and to send to the server
+    String httpRequestData = "user_code=" + user_code + "&card_id=" + uid + "&scanner=" + rfidAddress;  // Creates a string with all the data and to send to the server
     http.begin("http://" + String(host) + "/receive_data");                                   // Defines the link to the web server which the data is to be sent to
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");       // Defines header for JSON request sent to the server
     Serial.print("\nhttpRequestData: ");                                       // Prints out what is going to be sent to the server
@@ -148,6 +148,17 @@ String write_response(const String user_code, const String uid, const String rfi
     if (httpResponseCode>0) {                                                  // Checks if the response code is greater than 0 (Meaning that the messasge was successfully sent)
       Serial.println("HTTP Response code: ");                                  // Prints the reponse code to the serial monitor
       Serial.print(httpResponseCode);
+
+      if (httpResponseCode == HTTP_CODE_OK) {                                  // Checks if the response code was good
+        const String& payload = http.getString();                              // Gets string back from the server
+        Serial.println("received payload:\n<<");                               // Prints string from server to serial monitor
+        Serial.println(payload);
+        Serial.println(">>");
+        lcd.clear();                                                           // Clears then prints string from server to LCD
+        lcd.setCursor(0,0);
+        lcd.print(payload);
+        delay(300);
+      }
 
     }
     else {                                                                     // If the HTTP repose code is not greater than 0 then an error has occured
@@ -282,6 +293,7 @@ void RFID_read() {
   lcd.print("Username: ");              // Printing username to the LCD
   lcd.print(uname);
   lcd.setCursor(0,0);                   // Setting LCD cursor back to start
+  delay(800);
   String username;
   username = String(uname);             // Turning char array into string
   send_data(userid, card_uid);          // Running function to send the data from the rfid chip to server
@@ -293,6 +305,8 @@ void RFID_read() {
   mfrc522.PICC_HaltA();
   mfrc522.PCD_StopCrypto1();
 }
+
+
 
 
 // Custom function for writing to the RFID chip
@@ -415,6 +429,7 @@ void RFID_write() {
   }
   else Serial.println(F("MIFARE_Write() success: "));
 
+  write_response(userCode, card_uid, moduelAddress);
 
   Serial.println(" ");
   mfrc522.PICC_HaltA(); // Halt PICC
