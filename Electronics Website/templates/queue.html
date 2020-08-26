@@ -30,9 +30,18 @@
     {% if queue %}
         <h2>Queue</h2>
         <ul>
-            {% for q in queue %}
-                <li>{{ q.user.name }} {{ q.scanners.name }}</li>
-            {% endfor %}
+            
+                {% for q in queue %}
+                    <li>
+                        {{ q.user.name }} {{ q.scanners.name }} 
+                        <form action="{{ url_for('remove_queue') }}" method="POST">
+                            <input type="hidden" value="{{ q.user.id }}" name="user">
+                            <input type="hidden" value="{{ q.scanners.id }}" name="scanner">
+                            <input type="submit" value='Delete'>
+                        </form>
+                    </li>
+                    {% endfor %}
+            </form>
         </ul>
     {% endif %}
 {% endblock %}

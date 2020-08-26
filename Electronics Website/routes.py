@@ -152,7 +152,7 @@ def queue_user():
             flash('User is already queued to scanner')
         else:
             try:
-                new_queue = ScannerQueue(user_id = form.user.data, scanner=form.scanner.data)
+                new_queue = ScannerQueue(user_id=form.user.data, scanner=form.scanner.data)
                 db.session.add(new_queue)
                 db.session.flush()
             except:
@@ -164,14 +164,31 @@ def queue_user():
     queue = ScannerQueue.query.all()
     return render_template('queue.html', form=form, queue=queue)
 
+@app.route('/remove_queue', methods=['POST'])
+def remove_queue():
+    user_id = request.form['user']
+    scanner = request.form['scanner']
+    queue = ScannerQueue.query.filter_by(user_id=int(user_id), scanner=scanner).first()
+    print(queue)
+    try:
+        db.session.delete(queue)
+        db.session.flush()
+    except:
+        flash('Unable to delete')
+        db.session.rollback()
+    else:
+        db.session.commit()
+    return redirect(url_for('queue_user'))
+
 @app.route('/get_data/<scanner>/<data_type>', methods=['GET'])
 def getdata(scanner, data_type):
-    user = ScannerQueue.query.filter_by(scanner=scanner.strip()).first()
+    scanner_object = Scanner.query.filter_by(name=scanner.strip()).first()
+    user = ScannerQueue.query.filter_by(scanner=scanner_object.id).first()
     if user:
         if data_type == "name":
             return user.user.name
         elif data_type == "code":
-            return user.user.user_code
+            return str(user.user.user_code)
     return 'No User'
 
 @app.route('/receive_data', methods=['POST'])

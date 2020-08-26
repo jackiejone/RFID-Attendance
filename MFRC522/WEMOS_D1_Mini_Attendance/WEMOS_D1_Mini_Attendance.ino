@@ -71,7 +71,6 @@ void setup() {
   pinMode(switchPin, INPUT);                                // Sets pinmode of switch pin
   SPI.begin();                                              // Initialize SPI bus for communication to MFRC522
   mfrc522.PCD_Init();                                       // Initialize the MFRC522
-  pinMode(RED_LED, OUTPUT);                                 // Sets LED pin to output
 }
 
 // Looping main functions
@@ -160,7 +159,7 @@ String write_response(const String user_code, const String uid, const String rfi
 // Custom function to get usernames and ids to write to an RFID chip
 String get_user(const String rfidAddress, const String data) {
   HTTPClient http;
-  http.begin("http://" + String(host) + "/get_users/" + rfidAddress + "/" + data);
+  http.begin("http://" + String(host) + "/get_data/" + rfidAddress + "/" + data);
   int httpCode = http.GET();
 
   String payload = http.getString();
@@ -198,7 +197,7 @@ void RFID_read() {
 
   //-------------------------------------------
   
-                                    // Turning card details into a string
+  // Turning card details into a string
   String card_uid;
   char str[32] = "";
   array_to_string(mfrc522.uid.uidByte, 4, str); //Insert (byte array, length, char array for output)
@@ -321,17 +320,23 @@ void RFID_write() {
   MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
   Serial.println(mfrc522.PICC_GetTypeName(piccType));
 
+  // Gets UID of card and turns it into a string
+  String card_uid;
+  char str[32] = "";
+  array_to_string(mfrc522.uid.uidByte, 4, str); //Insert (byte array, length, char array for output)
+  Serial.println("UID OF CARD");
+  Serial.println(str); //Print the output uid string
+  card_uid = String(str);
+
   byte buffer[34];
   byte block;
   MFRC522::StatusCode status;
   byte len;
 
   
-
-  // Ask personal data: Name
-  Serial.println(F("Type name, ending with #"));
-  String userName = get_user(moduelAddress,"name");  // Function to get the name of the user from the database
-  userName.getBytes(buffer, 30);                         // Converting the name from a string to a buffer array
+  // Gets name from database
+  String userName = get_user(moduelAddress, "name");  // Function to get the name of the user from the database
+  userName.getBytes(buffer, 30);                     // Converting the name from a string to a buffer array
 
   block = 1;
   //Serial.println(F("Authenticating using key A..."));
@@ -370,10 +375,9 @@ void RFID_write() {
   }
   else Serial.println(F("MIFARE_Write() success: "));
 
-  // Ask personal data: student number
-  Serial.println(F("Type student number, ending with #"));
-  len = Serial.readBytesUntil('#', (char *) buffer, 20) ; // read first name from serial
-  for (byte i = len; i < 20; i++) buffer[i] = ' ';     // pad with spaces
+  // Gets student number from database
+  String userCode = get_user(moduelAddress, "code");  // Function to get the name of the user from the database
+  userCode.getBytes(buffer, 20);                     // Converting the name from a string to a buffer array
 
   block = 4;
   //Serial.println(F("Authenticating using key A..."));
