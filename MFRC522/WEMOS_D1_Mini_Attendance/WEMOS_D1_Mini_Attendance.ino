@@ -88,7 +88,7 @@ void loop() {
     Serial.print(".");                                      // Printing "." to serial monitor
     delay(300);                                             // 0.3 seconds of delay
   }
-  
+
   // Checks the state of the pin connected to the switch to switch between reading and writing mode
   if (digitalRead(switchPin) == LOW) {                      // If the pin is LOW, put the system into Read Mode
     RFID_read();                                            // Runs function for reading RFID tag
@@ -196,22 +196,22 @@ String get_user(const String rfidAddress, const String data) {
   HTTPClient http;
   http.begin("http://" + String(host) + "/get_data/" + rfidAddress + "/" + data);
   int httpCode = http.GET();
-
-  if (httpCode > 0) {
+  
   String payload = http.getString();
   Serial.println("\nReturned Data: " + payload);
   http.end();
-  return payload;
-  } 
-  else {
-      Serial.println("Error code: ");                                          // Prints HTTP response code to the serial monitor
+  
+  if (httpCode < 0) {
+      Serial.println("Error code: ");
       Serial.print(httpCode);
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("An Error Occured");
       lcd.setCursor(0, 1);
-      lcd.print("Check Server Status");
+      lcd.print("Check Server");
+      delay(800);
   }
+  return payload;
   }
 
 
@@ -349,8 +349,10 @@ void RFID_write() {
 
   // Gets name from database
   String userName = get_user(moduelAddress, "name");  // Function to get the name of the user from the database
+
   // Gets student number from database
   String userCode = get_user(moduelAddress, "code");  // Function to get the name of the user from the database
+
 
   if (userName == "No User" || userCode == "No User") {
     Serial.println("No User");
@@ -361,6 +363,9 @@ void RFID_write() {
     lcd.print("Queue User");
     delay(800);
     return;
+  } else if (userName == "" || userCode == "") {
+    return;
+    
   } else {
     lcd.clear();
     lcd.setCursor(0, 0);
