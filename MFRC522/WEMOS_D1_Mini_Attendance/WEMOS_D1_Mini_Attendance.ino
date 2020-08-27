@@ -39,7 +39,7 @@ const uint16_t port = 80;          // Server Port
 const String moduelAddress = RFID_MODULE_ADDRESS; // Address of RFID module for server to identify it
 
 // Network connecting message
-String message = "Connecting to: " + String(ssid); 
+const String message = "Connecting to: " + String(ssid); 
 
 // Initialisation of system
 void setup() {
@@ -75,6 +75,20 @@ void setup() {
 
 // Looping main functions
 void loop() {
+  // Makes sure that the system is connected to WiFi while operating
+  if (WiFi.status() != WL_CONNECTED) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(message);                                   // Show network connection message on LCD
+    WiFi.mode(WIFI_STA);                                      // Setting ESP8266 as a WIFI client
+    WiFi.begin(ssid, password);                               // Beginning Network connection
+  }
+  while (WiFi.status() != WL_CONNECTED) {                   // Checking if the ESP8266 is not connected to the network
+    lcd.scrollDisplayLeft();                                // Scrolling the message on LCD
+    Serial.print(".");                                      // Printing "." to serial monitor
+    delay(300);                                             // 0.3 seconds of delay
+  }
+  
   // Checks the state of the pin connected to the switch to switch between reading and writing mode
   if (digitalRead(switchPin) == LOW) {                      // If the pin is LOW, put the system into Read Mode
     RFID_read();                                            // Runs function for reading RFID tag
@@ -131,6 +145,11 @@ void send_data(const String user_code, const String uid) {
     else {                                                                     // If the HTTP repose code is not greater than 0 then an error has occured
       Serial.println("Error code: ");                                          // Prints HTTP response code to the serial monitor
       Serial.print(httpResponseCode);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("An Error Occured");
+      lcd.setCursor(0, 1);
+      lcd.print("Check Server Status");
       }
   }
 
@@ -164,6 +183,11 @@ void write_response(const String user_code, const String uid, const String rfidA
     else {                                                                     // If the HTTP repose code is not greater than 0 then an error has occured
       Serial.println("Error code: ");                                          // Prints HTTP response code to the serial monitor
       Serial.print(httpResponseCode);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("An Error Occured");
+      lcd.setCursor(0, 1);
+      lcd.print("Check Server Status");
       }
   }
 
@@ -173,10 +197,21 @@ String get_user(const String rfidAddress, const String data) {
   http.begin("http://" + String(host) + "/get_data/" + rfidAddress + "/" + data);
   int httpCode = http.GET();
 
+  if (httpCode > 0) {
   String payload = http.getString();
   Serial.println("\nReturned Data: " + payload);
   http.end();
   return payload;
+  } 
+  else {
+      Serial.println("Error code: ");                                          // Prints HTTP response code to the serial monitor
+      Serial.print(httpCode);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("An Error Occured");
+      lcd.setCursor(0, 1);
+      lcd.print("Check Server Status");
+  }
   }
 
 
