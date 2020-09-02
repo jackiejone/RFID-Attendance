@@ -104,6 +104,7 @@ void loop() {
 }
 
 // Function to convert card UID to string
+// From https://forum.arduino.cc/index.php?topic=639321.0
 void array_to_string(byte array[], unsigned int len, char buffer[])
 {
    for (unsigned int i = 0; i < len; i++)
@@ -116,7 +117,7 @@ void array_to_string(byte array[], unsigned int len, char buffer[])
    buffer[len*2] = '\0';
 }
 
-// Custom function for sending data to server
+// Function for sending data to server
 void send_data(const String user_code, const String uid) {
     HTTPClient http;                                                           // Begins HTTP client
     String httpRequestData = "user_code=" + user_code + "&card_id=" + uid;  // Creates a string with all the data and to send to the server
@@ -135,7 +136,7 @@ void send_data(const String user_code, const String uid) {
         Serial.println("received payload:\n<<");                               // Prints string from server to serial monitor
         Serial.println(payload);
         Serial.println(">>");
-        lcd.clear();                                                           // Clears then prints string from server to LCD
+        lcd.clear();                                                           // Clears then prints the string received from the server to the LCD
         lcd.setCursor(0,0);
         lcd.print(payload);
         delay(300);
@@ -145,7 +146,7 @@ void send_data(const String user_code, const String uid) {
     else {                                                                     // If the HTTP repose code is not greater than 0 then an error has occured
       Serial.println("Error code: ");                                          // Prints HTTP response code to the serial monitor
       Serial.print(httpResponseCode);
-      lcd.clear();
+      lcd.clear();                                                             // Prints that an error has occured on te serial monitor
       lcd.setCursor(0, 0);
       lcd.print("An Error Occured");
       lcd.setCursor(0, 1);
@@ -183,7 +184,7 @@ void write_response(const String user_code, const String uid, const String rfidA
     else {                                                                     // If the HTTP repose code is not greater than 0 then an error has occured
       Serial.println("Error code: ");                                          // Prints HTTP response code to the serial monitor
       Serial.print(httpResponseCode);
-      lcd.clear();
+      lcd.clear();                                                             // Prints that an error has occured to the LCD
       lcd.setCursor(0, 0);
       lcd.print("An Error Occured");
       lcd.setCursor(0, 1);
@@ -194,24 +195,24 @@ void write_response(const String user_code, const String uid, const String rfidA
 // Custom function to get usernames and ids to write to an RFID chip
 String get_user(const String rfidAddress, const String data) {
   HTTPClient http;
-  http.begin("http://" + String(host) + "/get_data/" + rfidAddress + "/" + data);
-  int httpCode = http.GET();
+  http.begin("http://" + String(host) + "/get_data/" + rfidAddress + "/" + data);  // Defining the link which the get request is to be sent to
+  int httpCode = http.GET();                                                       // Sending the get request to the server
   
-  String payload = http.getString();
-  Serial.println("\nReturned Data: " + payload);
-  http.end();
+  String payload = http.getString();                                               // Gets the data back from the server
+  Serial.println("\nReturned Data: " + payload);                                   // Prints the data from the server to the serial monitor
+  http.end();                                                                      // Ends the HTTP session
   
-  if (httpCode < 0) {
-      Serial.println("Error code: ");
+  if (httpCode < 0) {                                                              // Checks if the http code returned from the server is less than 0 (an error)
+      Serial.println("Error code: ");                                              // Prints the error code to the serial monitor
       Serial.print(httpCode);
-      lcd.clear();
+      lcd.clear();                                                                 // Prints that an error has occued to the LCD
       lcd.setCursor(0, 0);
       lcd.print("An Error Occured");
       lcd.setCursor(0, 1);
       lcd.print("Check Server");
       delay(800);
   }
-  return payload;
+  return payload;                                                                  // Returns the data from the server as the output of the function
   }
 
 
@@ -353,7 +354,7 @@ void RFID_write() {
   // Gets student number from database
   String userCode = get_user(moduelAddress, "code");  // Function to get the name of the user from the database
 
-
+  // Checking for any errors or checking if there are no users queued when requesting user data from the server
   if (userName == "No User" || userCode == "No User") {
     Serial.println("No User");
     lcd.clear();
@@ -367,6 +368,7 @@ void RFID_write() {
     return;
     
   } else {
+    //  Prints the user's name and code from the server to the LCD
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Name: ");
@@ -491,9 +493,10 @@ void RFID_write() {
   }
   else Serial.println(F("MIFARE_Write() success: "));
 
+  // Runs a function to tell the server that the name and user id was successfully written to the card
   write_response(userCode, card_uid, moduelAddress);
   
-  
+  // Prints to the serial monitor and LCD that the data was successfully written
   Serial.println(" ");
   Serial.println("Successful Write");
   lcd.clear();
