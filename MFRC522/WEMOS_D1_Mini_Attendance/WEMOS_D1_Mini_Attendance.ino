@@ -196,7 +196,6 @@ void write_response(const String user_code, const String uid, const String rfidA
 String get_user(const String rfidAddress, const String data) {
   HTTPClient http;
   http.begin("http://" + String(host) + ":" + String(port) + "/get_data/" + rfidAddress + "/" + data);
-  Serial.println("http://" + String(host) + String(port) + "/get_data/" + rfidAddress + "/" + data);
   int httpCode = http.GET();
 
   
@@ -257,7 +256,6 @@ void RFID_read() {
 
 
   //------------------------------------------- Get student ID from the card
-  Serial.print(F("Student ID: "));
 
   byte buffer1[18];
 
@@ -299,8 +297,6 @@ void RFID_read() {
   userid = String(usrid);               // Turning char array of user ID into a string
 
   //---------------------------------------- Getting first name from RFID chip
-
-  Serial.print(F("Name: \n"));
 
   byte buffer2[18];
   block = 1;
