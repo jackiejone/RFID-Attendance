@@ -34,7 +34,7 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);
 const char* ssid     = STASSID;    // Network Name
 const char* password = STAPSK;     // Network Password
 const char* host = "192.168.4.1";  // Server IP
-const uint16_t port = 80;          // Server Port
+const uint16_t port = 100;          // Server Port
 
 const String moduelAddress = RFID_MODULE_ADDRESS; // Address of RFID module for server to identify it
 
@@ -120,7 +120,7 @@ void array_to_string(byte array[], unsigned int len, char buffer[])
 void send_data(const String user_code, const String uid) {
     HTTPClient http;                                                           // Begins HTTP client
     String httpRequestData = "user_code=" + user_code + "&card_id=" + uid;  // Creates a string with all the data and to send to the server
-    http.begin("http://" + String(host) + "/insert");                                   // Defines the link to the web server which the data is to be sent to
+    http.begin("http://" + String(host) + String(port) + "/insert");                                   // Defines the link to the web server which the data is to be sent to
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");       // Defines header for JSON request sent to the server
     Serial.print("\nhttpRequestData: ");                                       // Prints out what is going to be sent to the server
     Serial.print(httpRequestData);
@@ -158,7 +158,7 @@ void send_data(const String user_code, const String uid) {
 void write_response(const String user_code, const String uid, const String rfidAddress) {
     HTTPClient http;                                                           // Begins HTTP client
     String httpRequestData = "user_code=" + user_code + "&card_id=" + uid + "&scanner=" + rfidAddress;  // Creates a string with all the data and to send to the server
-    http.begin("http://" + String(host) + "/receive_data");                                   // Defines the link to the web server which the data is to be sent to
+    http.begin("http://" + String(host)+ String(port) + "/receive_data");                                   // Defines the link to the web server which the data is to be sent to
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");       // Defines header for JSON request sent to the server
     Serial.print("\nhttpRequestData: ");                                       // Prints out what is going to be sent to the server
     Serial.print(httpRequestData);
@@ -194,7 +194,7 @@ void write_response(const String user_code, const String uid, const String rfidA
 // Custom function to get usernames and ids to write to an RFID chip
 String get_user(const String rfidAddress, const String data) {
   HTTPClient http;
-  http.begin("http://" + String(host) + "/get_data/" + rfidAddress + "/" + data);
+  http.begin("http://" + String(host) + String(port) + "/get_data/" + rfidAddress + "/" + data);
   int httpCode = http.GET();
   
   String payload = http.getString();
