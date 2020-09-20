@@ -195,13 +195,10 @@ void write_response(const String user_code, const String uid, const String rfidA
 // Custom function to get usernames and ids to write to an RFID chip
 String get_user(const String rfidAddress, const String data) {
   HTTPClient http;
-<<<<<<< HEAD
   http.begin("http://" + String(host) + String(port) + "/get_data/" + rfidAddress + "/" + data);
   int httpCode = http.GET();
-=======
   http.begin("http://" + String(host) + "/get_data/" + rfidAddress + "/" + data);  // Defining the link which the get request is to be sent to
   int httpCode = http.GET();                                                       // Sending the get request to the server
->>>>>>> 408c2ac8667ed5c74e79416ddb3700687ed740ef
   
   String payload = http.getString();                                               // Gets the data back from the server
   Serial.println("\nReturned Data: " + payload);                                   // Prints the data from the server to the serial monitor
