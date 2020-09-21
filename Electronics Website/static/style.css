@@ -1,0 +1,13 @@
+#nav ul {
+    list-style-type: none;
+    margin-inline-start: 0;
+    margin-block-start: 0;
+    padding-inline-start: 0;
+}
+
+#nav li {
+    display: inline;
+    padding-left: .5em;
+    padding-right: .5em;
+    background-color: orange;
+}

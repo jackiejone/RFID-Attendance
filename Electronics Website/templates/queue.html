@@ -33,7 +33,7 @@
             
                 {% for q in queue %}
                     <li>
-                        {{ q.user.name }} {{ q.scanners.name }} 
+                        {{ q.user.name }} {{ q.scanners.name }} {{ q.user.user_code }}
                         <form action="{{ url_for('remove_queue') }}" method="POST">
                             <input type="hidden" value="{{ q.user.id }}" name="user">
                             <input type="hidden" value="{{ q.scanners.id }}" name="scanner">

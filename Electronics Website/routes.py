@@ -59,6 +59,7 @@ db.create_all()
 @app.route('/', methods=['GET'])
 @app.route('/home', methods=['GET'])
 def index():
+    # Gets all the times of every user to display on the page
     times = UserTimes.query.all()
     if times:
         times_list = [(i.user.name, i.time) for i in times]
@@ -70,6 +71,7 @@ def index():
 def register():
     form = RegisterForm()
     if request.method == 'POST' and form.validate_on_submit():
+        # Processing form data and adding it to the database
         name = form.user.data.strip().lower()
         user_code = form.user_code.data
         if User.query.filter_by(user_code=user_code).first():
@@ -99,16 +101,19 @@ def ins():
     except:
         return 'Failed To Obtain Values'
     else:
-        # Checks if the user id and uid exist
-        if user_code and uid:
+        if user_code and uid: # Checks if the user id and uid exist
+            # Cleans up data from the cards
             user_code.strip("ï¿½�?\n")
+            # Converts data types
             user_code = int(user_code) if type(user_code) != int else user_code
             uid = uid.strip()
+            # Gets current datetime
             time = datetime.datetime.now()
             user = User.query.filter_by(user_code=user_code).first()
+            # Checks if the card belongs to the user
             if user.uid != uid:
                 return 'Invalid Card'
-        
+            
             try:
                 new_time = UserTimes(user_id=user.id, time=time)
                 db.session.add(new_time)
@@ -145,7 +150,7 @@ def add_scanner():
 @app.route('/queue_user', methods=['GET', 'POST'])
 def queue_user():
     form = QueueForm()
-    form.user.choices = [(x.id, x.name) for x in User.query.all()]
+    form.user.choices = [(x.id, f"{x.name} : {x.user_code}") for x in User.query.all()]
     form.scanner.choices = [(x.id, x.name) for x in Scanner.query.all()]
     if request.method == 'POST' and form.validate_on_submit():
         if ScannerQueue.query.filter_by(user_id=form.user.data, scanner=form.scanner.data).first():
@@ -251,5 +256,5 @@ def error(e):
 
 # Runs app if the script is run directly
 if __name__ == '__main__':
-    #app.run(host='0.0.0.0', debug=True, port=80)
+    #app.run(host='0.0.0.0', debug=True, port=100)
     app.run(debug=True)

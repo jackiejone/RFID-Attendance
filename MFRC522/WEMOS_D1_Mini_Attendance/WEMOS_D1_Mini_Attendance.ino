@@ -266,6 +266,13 @@ void RFID_read() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("Authentication failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Authentication");
+    lcd.setCursor(0,1);
+    lcd.print("failed");
+    delay(500);
+    lcd.clear();
     return;
   }
 
@@ -273,6 +280,13 @@ void RFID_read() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("Reading failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Reading");
+    lcd.setCursor(0,1);
+    lcd.print("failed");
+    delay(500);
+    lcd.clear();
     return;
   }
 
@@ -305,6 +319,13 @@ void RFID_read() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("Authentication failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Authentication");
+    lcd.setCursor(0,1);
+    lcd.print("failed");
+    delay(500);
+    lcd.clear();
     return;
   }
 
@@ -314,7 +335,7 @@ void RFID_read() {
     Serial.println(mfrc522.GetStatusCodeName(status));
     return;
   }
-
+  
   // Getting student id from the card
   char uname[] = "";
   for (uint8_t i = 0; i < 16; i++) {
@@ -421,6 +442,13 @@ void RFID_write() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("PCD_Authenticate() failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Authentication");
+    lcd.setCursor(0,1);
+    lcd.print("failed");
+    delay(500);
+    lcd.clear();
     return;
   }
   else Serial.println(F("PCD_Authenticate() success: "));
@@ -430,6 +458,13 @@ void RFID_write() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("MIFARE_Write() failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Write");
+    lcd.setCursor(0,1);
+    lcd.print("failed");
+    delay(500);
+    lcd.clear();
     return;
   }
   else Serial.println(F("MIFARE_Write() success: "));
@@ -440,6 +475,13 @@ void RFID_write() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("PCD_Authenticate() failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Authentication");
+    lcd.setCursor(0,1);
+    lcd.print("failed");
+    delay(500);
+    lcd.clear();
     return;
   }
 
@@ -448,6 +490,13 @@ void RFID_write() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("MIFARE_Write() failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Write");
+    lcd.setCursor(0,1);
+    lcd.print("failed");
+    delay(500);
+    lcd.clear();
     return;
   }
   else Serial.println(F("MIFARE_Write() success: "));
@@ -461,6 +510,13 @@ void RFID_write() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("PCD_Authenticate() failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Authentication");
+    lcd.setCursor(0,1);
+    lcd.print("failed");
+    delay(500);
+    lcd.clear();
     return;
   }
 
@@ -469,6 +525,12 @@ void RFID_write() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("MIFARE_Write() failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Write");
+    lcd.setCursor(0,1);
+    lcd.print("failed");
+    delay(500);
     return;
   }
   else Serial.println(F("MIFARE_Write() success: "));
@@ -479,6 +541,13 @@ void RFID_write() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("PCD_Authenticate() failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Authentication");
+    lcd.setCursor(0,1);
+    lcd.print("failed");
+    delay(500);
+    lcd.clear();
     return;
   }
 
@@ -487,6 +556,13 @@ void RFID_write() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("MIFARE_Write() failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Write");
+    lcd.setCursor(0,1);
+    lcd.print("failed");
+    delay(500);
+    lcd.clear();
     return;
   }
   else Serial.println(F("MIFARE_Write() success: "));
